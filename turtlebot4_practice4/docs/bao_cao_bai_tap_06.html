@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Báo Cáo Bài Tập 6 – Giao Tiếp Phi Ngôn Ngữ & Điều Khiển TurtleBot 4 Bằng Cử Chỉ Tay</title>
+  <style>
+    :root {
+      --primary: #002d62;
+      --secondary: #006699;
+      --accent: #b41919;
+      --boxbg: #f0f5fd;
+      --codebg: #f8f9fa;
+      --border: #b4cdeb;
+    }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      line-height: 1.6;
+      color: #222;
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 24px;
+      background: #fff;
+    }
+    .cover {
+      border: 3px double var(--primary);
+      padding: 36px 28px;
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .cover img.logo {
+      width: 110px;
+      margin: 14px 0;
+    }
+    h1, h2, h3 {
+      color: var(--primary);
+    }
+    h2 {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 6px;
+      margin-top: 32px;
+    }
+    h3 {
+      color: var(--secondary);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--primary);
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background: var(--boxbg);
+    }
+    pre, code {
+      font-family: "Courier New", Courier, monospace;
+      background: var(--codebg);
+    }
+    pre {
+      padding: 12px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.86rem;
+    }
+    .figure {
+      text-align: center;
+      margin: 22px 0;
+    }
+    .figure img {
+      max-width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .caption {
+      font-style: italic;
+      font-size: 0.92rem;
+      color: #444;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <h3>ĐẠI HỌC QUỐC GIA HÀ NỘI<br/>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ</h3>
+    <img class="logo" src="figures/uet_logo.png" alt="UET Logo" />
+    <h2>BÁO CÁO BÀI TẬP THỰC HÀNH 06</h2>
+    <h1>GIAO TIẾP PHI NGÔN NGỮ VÀ ĐIỀU KHIỂN TURTLEBOT 4 BẰNG CỬ CHỈ TAY AI</h1>
+    <p><strong>Non-verbal Human–Robot Interaction Using Hand Gesture Recognition (MediaPipe &amp; OpenCV)</strong></p>
+    <br/>
+    <p>
+      <strong>Sinh viên thực hiện:</strong> Nguyễn Quang Tuân – MSSV: 23020767<br/>
+      <strong>Giảng viên hướng dẫn:</strong> PGS.TS. Hoàng Văn Xiêm, CN. Nguyễn Quốc Bảo
+    </p>
+    <p><strong>Hà Nội – 2026</strong></p>
+  </div>
+
+  <h2>1. Sơ Đồ Kiến Trúc Hệ Thống</h2>
+  <p>
+    Hệ thống nhận diện cử chỉ tay qua webcam laptop bằng <strong>MediaPipe Gesture Recognizer</strong> kết hợp <strong>OpenCV</strong> và điều khiển hành vi của robot <strong>TurtleBot 4 Standard</strong> trong môi trường <strong>Gazebo Fortress</strong> kèm bản đồ định vị <strong>RViz2</strong> trên nền tảng <strong>ROS 2 Humble</strong>:
+  </p>
+  <pre>
+[TẦNG 1: WEBCAM &amp; AI MEDIAPIPE (gesture_recognition_node)]
+  Webcam Laptop (/dev/video0) --&gt; OpenCV --&gt; MediaPipe Gesture Recognizer (21 Hand Landmarks)
+  --&gt; Phân loại 06 cử chỉ + Dynamic Wave Detector --&gt; Bộ lọc chống nhiễu Temporal Debounce
+  --&gt; Hiển thị HUD trên cửa sổ OpenCV &amp; Publish topic /detected_gesture (std_msgs/msg/String)
+                                      |
+                                      v
+[TẦNG 2: MÁY TRẠNG THÁI ĐIỀU KHIỂN HÀNH VI (robot_behavior_node)]
+  Subscribe /detected_gesture, /scan, /odom --&gt; FSM 4 trạng thái:
+  (1) IDLE (Chờ lệnh) --&gt; [Wave / Pointing_Up / Victory] --&gt; (2) SELECTED (Chờ xác nhận)
+  (2) SELECTED        --&gt; [Thumbs_Up (Xác nhận)]         --&gt; (3) EXECUTING (Thực thi hành vi)
+  (3) EXECUTING       --&gt; [Open_Palm / Timeout / LiDAR]  --&gt; (4) STOPPED (Dừng khẩn cấp)
+  (Mọi trạng thái)    --&gt; [Closed_Fist (Hủy hành vi)]    --&gt; (1) IDLE (Trạng thái chờ)
+                                      |
+                                      v  Publish /cmd_vel (geometry_msgs/msg/Twist @ 20 Hz)
+[TẦNG 3: MÔ PHỎNG GAZEBO FORTRESS &amp; BẢN ĐỒ ĐỊNH VỊ RVIZ2]
+  - TurtleBot 4 Standard (Create 3 safety_override='full' hỗ trợ cả tiến và lùi)
+  - Auto Undock &amp; di chuyển 0.90m ra khu vực trung tâm rộng thoáng, không va chạm
+  - RViz2 + Map Server + AMCL hiển thị bản đồ map.yaml đã lưu, RobotModel và tia quét /scan
+  </pre>
+
+  <h2>2. Giải Thích Các Node, Topic Và Luồng Xử Lý</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Tên Node / Topic</th>
+        <th>Loại / Kiểu dữ liệu</th>
+        <th>Vai trò và luồng xử lý</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>webcam_cmdvel_check</code></td>
+        <td>ROS 2 Node (Phần 1)</td>
+        <td>Kiểm tra robot nhận lệnh vận tốc qua <code>/cmd_vel</code> (tiến, lùi, xoay trái–phải) trong Gazebo và đọc/hiển thị hình ảnh từ webcam laptop bằng OpenCV.</td>
+      </tr>
+      <tr>
+        <td><code>gesture_recognition_node</code></td>
+        <td>ROS 2 Node (Phần 2)</td>
+        <td>Đọc hình ảnh từ webcam bằng OpenCV, nhận diện 06 cử chỉ tay bằng MediaPipe Gesture Recognizer, hiển thị tên cử chỉ + độ tin cậy (%) trên cửa sổ webcam và publish lên <code>/detected_gesture</code>.</td>
+      </tr>
+      <tr>
+        <td><code>robot_behavior_node</code></td>
+        <td>ROS 2 Node (Phần 3)</td>
+        <td>Subscribe <code>/detected_gesture</code>, vận hành máy trạng thái FSM yêu cầu xác nhận bằng <code>Thumbs_Up</code>, chống nhiễu, watchdog mất tín hiệu và điều khiển TurtleBot 4 qua <code>/cmd_vel</code>.</td>
+      </tr>
+      <tr>
+        <td><code>/detected_gesture</code></td>
+        <td><code>std_msgs/msg/String</code></td>
+        <td>Topic truyền nhãn cử chỉ tay đã lọc chống nhiễu (<code>Wave</code>, <code>Pointing_Up</code>, <code>Victory</code>, <code>Thumbs_Up</code>, <code>Open_Palm</code>, <code>Closed_Fist</code>, <code>None</code>) ở tần số 15 Hz.</td>
+      </tr>
+      <tr>
+        <td><code>/cmd_vel</code></td>
+        <td><code>geometry_msgs/msg/Twist</code></td>
+        <td>Topic điều khiển vận tốc dài (<code>linear.x</code>) và vận tốc góc (<code>angular.z</code>) của TurtleBot 4 ở tần số 20 Hz.</td>
+      </tr>
+      <tr>
+        <td><code>/robot_behavior_status</code></td>
+        <td><code>std_msgs/msg/String</code></td>
+        <td>Topic đồng bộ trạng thái FSM của robot lên màn hình HUD của cửa sổ Webcam OpenCV.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3. Bảng Ánh Xạ Cử Chỉ Tay Và Hành Vi Robot</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Cử chỉ tay</th>
+        <th>Nhãn <code>/detected_gesture</code></th>
+        <th>Hành vi của TurtleBot 4 &amp; Thông số điều khiển</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><strong>Vẫy tay (Wave)</strong></td>
+        <td><code>Wave</code></td>
+        <td><strong>Chọn hành vi: Robot xoay trái–phải để chào lại.</strong> Khi xác nhận: thực hiện 4 pha xoay đối xứng (&omega; = &plusmn;0.85 rad/s) lắc chào trái–phải và quay về đúng góc ban đầu.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>Giơ 1 ngón tay (Pointing Up)</strong></td>
+        <td><code>Pointing_Up</code></td>
+        <td><strong>Chọn hành vi: Tiến–lùi 4 lần.</strong> Khi xác nhận: lặp 4 chu kỳ liên tiếp (tiến <em>v</em> = +0.20 m/s trong 1.8s, nghỉ 0.35s, lùi <em>v</em> = -0.20 m/s trong 1.8s, nghỉ 0.35s).</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>Giơ 2 ngón tay (Victory)</strong></td>
+        <td><code>Victory</code></td>
+        <td><strong>Chọn hành vi: Di chuyển theo quỹ đạo tròn.</strong> Khi xác nhận: phát đồng thời <em>v</em> = 0.18 m/s và &omega; = 0.45 rad/s tạo quỹ đạo tròn bán kính <em>R</em> = 0.40 m khép kín 360&deg;.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>Giơ ngón cái (Thumbs Up)</strong></td>
+        <td><code>Thumbs_Up</code></td>
+        <td><strong>Xác nhận và thực hiện hành vi đã chọn</strong> (chuyển FSM từ <code>SELECTED</code> sang <code>EXECUTING</code>).</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>Xòe bàn tay (Open Palm)</strong></td>
+        <td><code>Open_Palm</code></td>
+        <td><strong>Robot dừng ngay lập tức</strong> (phát tức thời <code>Twist(0, 0)</code> lên <code>/cmd_vel</code>, chuyển sang <code>STOPPED</code>).</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>Nắm tay (Closed Fist)</strong></td>
+        <td><code>Closed_Fist</code></td>
+        <td><strong>Hủy hành vi hiện tại</strong> và đưa robot trở về trạng thái chờ (<code>IDLE</code>).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Hình Ảnh Minh Họa Kết Quả Thực Nghiệm</h2>
+  <div class="figure">
+    <img src="figures/demo_gesture_control.png" alt="Kết quả thực nghiệm điều khiển TurtleBot 4 bằng cử chỉ tay AI" />
+    <div class="caption">
+      Hình 1: Toàn cảnh hệ thống đang vận hành: Terminal Log (trái trên), Gazebo Simulation với TurtleBot 4 ở khu vực rộng thoáng (trái dưới), RViz2 hiển thị bản đồ đã lưu &amp; AMCL (phải trên), và cửa sổ Webcam AI MediaPipe nhận diện cử chỉ Wave với độ tin cậy 99.0% (phải dưới).
+    </div>
+  </div>
+
+  <h2>5. Link Video Demo Và GitHub Repository</h2>
+  <ul>
+    <li><strong>GitHub Repository (Public):</strong> <a href="https://github.com/Tuan404cl/Turtlebot_sim_test3.git">https://github.com/Tuan404cl/Turtlebot_sim_test3.git</a></li>
+    <li><strong>Video Demo (Google Drive – Công khai):</strong> <a href="https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=drive_link">https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=drive_link</a></li>
+  </ul>
+</body>
+</html>

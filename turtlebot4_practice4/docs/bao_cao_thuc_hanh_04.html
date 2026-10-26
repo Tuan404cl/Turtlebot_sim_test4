@@ -1,330 +1,240 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Báo cáo Kỹ thuật: Định vị AMCL, Điều hướng tự động Nav2 & Nhận diện vật thể YOLOv8 trên TurtleBot 4</title>
-<style>
-  @page {
-    size: A4;
-    margin: 18mm 15mm 18mm 15mm;
-  }
-  body {
-    font-family: 'DejaVu Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #24292e;
-    line-height: 1.5;
-    font-size: 10pt;
-    margin: 0;
-    padding: 0;
-  }
-  h1 {
-    font-size: 16pt;
-    color: #002d62;
-    border-bottom: 2px solid #002d62;
-    padding-bottom: 6px;
-    margin-top: 6px;
-    margin-bottom: 6px;
-    text-align: center;
-    text-transform: uppercase;
-  }
-  h2 {
-    font-size: 12.5pt;
-    color: #002d62;
-    border-bottom: 1px solid #dfe2e5;
-    padding-bottom: 4px;
-    margin-top: 16px;
-    margin-bottom: 8px;
-  }
-  h3 {
-    font-size: 10.5pt;
-    color: #0366d6;
-    margin-top: 10px;
-    margin-bottom: 5px;
-  }
-  p, li {
-    font-size: 9.8pt;
-    margin: 4px 0;
-  }
-  .header-meta {
-    background-color: #f6f8fa;
-    border: 1px solid #d1d5da;
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    font-size: 9.5pt;
-  }
-  .header-meta table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  .header-meta td {
-    padding: 3px 6px;
-    border: none;
-  }
-  table.content-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 8px 0;
-    font-size: 9pt;
-  }
-  table.content-table th, table.content-table td {
-    border: 1px solid #dfe2e5;
-    padding: 5px 8px;
-    text-align: left;
-  }
-  table.content-table th {
-    background-color: #002d62;
-    color: #ffffff;
-    font-weight: 600;
-  }
-  table.content-table tr:nth-child(even) {
-    background-color: #f6f8fa;
-  }
-  code {
-    background-color: #f3f4f6;
-    border: 1px solid #e1e4e8;
-    border-radius: 3px;
-    padding: 1px 4px;
-    font-family: 'DejaVu Sans Mono', Consolas, monospace;
-    font-size: 8.8pt;
-    color: #c92a2a;
-  }
-  pre {
-    background-color: #f6f8fa;
-    border: 1px solid #d1d5da;
-    border-radius: 5px;
-    padding: 8px 12px;
-    overflow-x: auto;
-    font-family: 'DejaVu Sans Mono', Consolas, monospace;
-    font-size: 8.3pt;
-    line-height: 1.38;
-    margin: 6px 0;
-  }
-  .badge {
-    display: inline-block;
-    padding: 2px 6px;
-    font-size: 8pt;
-    font-weight: bold;
-    border-radius: 4px;
-  }
-  .badge-pass {
-    background-color: #28a745;
-    color: white;
-  }
-  .alert-box {
-    background-color: #e6ffed;
-    border-left: 4px solid #28a745;
-    padding: 8px 12px;
-    margin: 8px 0;
-    border-radius: 0 4px 4px 0;
-    font-size: 9.3pt;
-  }
-  .page-break {
-    page-break-before: always;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Báo Cáo Bài Tập 6 – Giao Tiếp Phi Ngôn Ngữ & Điều Khiển TurtleBot 4 Bằng Cử Chỉ Tay</title>
+  <style>
+    :root {
+      --primary: #002d62;
+      --secondary: #006699;
+      --accent: #b41919;
+      --boxbg: #f0f5fd;
+      --codebg: #f8f9fa;
+      --border: #b4cdeb;
+    }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      line-height: 1.6;
+      color: #222;
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 24px;
+      background: #fff;
+    }
+    .cover {
+      border: 3px double var(--primary);
+      padding: 36px 28px;
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .cover img.logo {
+      width: 110px;
+      margin: 14px 0;
+    }
+    h1, h2, h3 {
+      color: var(--primary);
+    }
+    h2 {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 6px;
+      margin-top: 32px;
+    }
+    h3 {
+      color: var(--secondary);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--primary);
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background: var(--boxbg);
+    }
+    pre, code {
+      font-family: "Courier New", Courier, monospace;
+      background: var(--codebg);
+    }
+    pre {
+      padding: 12px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.86rem;
+    }
+    .figure {
+      text-align: center;
+      margin: 22px 0;
+    }
+    .figure img {
+      max-width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .caption {
+      font-style: italic;
+      font-size: 0.92rem;
+      color: #444;
+      margin-top: 8px;
+    }
+  </style>
 </head>
 <body>
+  <div class="cover">
+    <h3>ĐẠI HỌC QUỐC GIA HÀ NỘI<br/>TRƯỜNG ĐẠI HỌC CÔNG NGHỆ</h3>
+    <img class="logo" src="figures/uet_logo.png" alt="UET Logo" />
+    <h2>BÁO CÁO BÀI TẬP THỰC HÀNH 06</h2>
+    <h1>GIAO TIẾP PHI NGÔN NGỮ VÀ ĐIỀU KHIỂN TURTLEBOT 4 BẰNG CỬ CHỈ TAY AI</h1>
+    <p><strong>Non-verbal Human–Robot Interaction Using Hand Gesture Recognition (MediaPipe &amp; OpenCV)</strong></p>
+    <br/>
+    <p>
+      <strong>Sinh viên thực hiện:</strong> Nguyễn Quang Tuân – MSSV: 23020767<br/>
+      <strong>Giảng viên hướng dẫn:</strong> PGS.TS. Hoàng Văn Xiêm, CN. Nguyễn Quốc Bảo
+    </p>
+    <p><strong>Hà Nội – 2026</strong></p>
+  </div>
 
-<h1>BÁO CÁO KỸ THUẬT: ĐIỀU KHIỂN ROBOT TURTLEBOT 4</h1>
-<p style="text-align:center; font-weight:bold; margin-top:-4px; color:#0366d6;">
-  ĐỊNH VỊ BẢN ĐỒ (AMCL LOCALIZATION), ĐIỀU HƯỚNG TỰ ĐỘNG (NAV2) &amp; NHẬN DIỆN VẬT THỂ VỚI CAMERA OAK-D + YOLOv8
-</p>
-
-<div class="header-meta">
-  <table>
-    <tr>
-      <td width="52%"><strong>Sinh viên thực hiện:</strong> Nguyễn Quang Tuân - <strong>MSSV:</strong> 23020767</td>
-      <td width="48%"><strong>Giảng viên hướng dẫn:</strong> PGS.TS. Hoàng Văn Xiêm, CN. Nguyễn Quốc Bảo</td>
-    </tr>
-    <tr>
-      <td><strong>Nền tảng:</strong> ROS 2 Humble / Gazebo Fortress (Ubuntu 22.04 LTS)</td>
-      <td><strong>Robot &amp; AI:</strong> TurtleBot 4 Standard (RPLiDAR + OAK-D) + YOLOv8n</td>
-    </tr>
-    <tr>
-      <td colspan="2"><strong>Video Demo (Google Drive Public):</strong> <code>https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=sharing</code></td>
-    </tr>
-    <tr>
-      <td colspan="2"><strong>GitHub Repository (Public):</strong> <code>https://github.com/Tuan404cl/Turtlebot_sim_test2.git</code></td>
-    </tr>
-  </table>
-</div>
-
-<h2>I. CẤU TRÚC GÓI CHƯƠNG TRÌNH TRONG THƯ MỤC <code>src/</code></h2>
-<p>Toàn bộ mã nguồn Python Nodes, Launch files, Configs, Bản đồ và Scripts tự động được đóng gói trong package <strong><code>turtlebot4_practice4</code></strong> theo chuẩn ROS 2 Ament Python:</p>
-
-<pre>
-turtlebot4_ws/src/
-└── turtlebot4_practice4/
-    ├── package.xml                       # Tuyên bố phụ thuộc ROS 2 (rclpy, nav2, cv_bridge, sensor_msgs...)
-    ├── setup.py                          # Cấu hình cài đặt package và 07 console_scripts
-    ├── turtlebot4_practice4/
-    │   ├── spawn_yolo_objects.py         # (Phần 1) Tự động thêm mô hình người, ghế, bàn vào Gazebo
-    │   ├── auto_undock.py                # (Phần 1) Tự động điều khiển robot rời trạm sạc (Undock)
-    │   ├── tf_relay.py                   # (Phần 1) Đồng bộ thời gian TF &amp; mock hardware services
-    │   ├── goal_survey.py                # (Phần 2) Khảo sát /clicked_point &amp; /amcl_pose lưu JSON
-    │   ├── auto_nav_goals.py             # (Phần 3) Điều hướng tự động qua 03 Goals bằng Nav2 Code
-    │   └── yolo_detector.py              # (Phần 4) Nhận diện vật thể từ Camera OAK-D bằng YOLOv8
-    ├── launch/
-    │   ├── sim_robot.launch.py           # Khởi chạy Gazebo Simulation với TurtleBot 4 Standard
-    │   ├── sim_localization.launch.py    # Khởi chạy AMCL Localization &amp; Map Server
-    │   └── sim_navigation.launch.py      # Launch tích hợp: Gazebo + Spawn Objects + AMCL + Nav2 + YOLOv8
-    ├── config/
-    │   ├── surveyed_goals.json           # Tọa độ (x, y, yaw) của 03 Goals khảo sát ở Phần 2
-    │   ├── localization_params.yaml      # Tham số bộ lọc hạt AMCL và Map Server
-    │   ├── nav2_params.yaml              # Tham số Costmaps, DWB Controller, NavFn Planner
-    │   ├── fastdds_udp_only.xml          # Cấu hình FastDDS UDP-only chống lỗi SHM deadlock
-    │   └── turtlebot4_nav2.rviz          # Giao diện RViz2 hiển thị Map, AMCL, Path, Camera &amp; YOLO
-    ├── maps/
-    │   └── map.yaml / map.pgm            # Bản đồ 2D Occupancy Grid đã xây dựng từ tuần trước
-    ├── scripts/
-    │   ├── run_part1_localization.sh     # Script chạy Phần 1: Simulation + Load Map + AMCL + Nav2
-    │   ├── run_part2_survey_goals.sh     # Script chạy Phần 2: Khảo sát tọa độ 03 Goals
-    │   ├── run_part3_auto_nav.sh         # Script chạy Phần 3: Lập trình tự hành qua 03 Goals
-    │   ├── run_part4_yolo.sh             # Script chạy Phần 4: Nhận diện vật thể Camera với YOLOv8
-    │   └── run_part4_navigation.sh       # Script chạy tích hợp toàn bộ Phần 1 -> Phần 4
-    └── docs/
-        └── bao_cao_thuc_hanh_04.(md|html|pdf) &amp; report.tex
-</pre>
-
-<h2>II. CÁC NODE VÀ TOPIC CỐT LÕI TRONG HỆ THỐNG</h2>
-<table class="content-table">
-  <tr>
-    <th width="26%">Node / Thành phần</th>
-    <th width="36%">Vai trò chức năng</th>
-    <th width="38%">Topic / Action / Service trao đổi</th>
-  </tr>
-  <tr>
-    <td><code>spawn_yolo_objects</code></td>
-    <td>Bổ sung các mô hình vật thể 3D (người đứng, ghế, ghế gấp, bàn) từ Ignition Fuel vào môi trường <code>warehouse</code>.</td>
-    <td>Gọi dịch vụ tạo thực thể của <code>ros_ign_gazebo</code> tại các tọa độ quanh 3 điểm Goal.</td>
-  </tr>
-  <tr>
-    <td><code>map_server</code> &amp;<br><code>amcl</code></td>
-    <td>Nạp bản đồ <code>map.yaml</code> từ tuần trước và định vị Monte Carlo thích nghi (Particle Filter).</td>
-    <td>Phát <code>/map</code>, nhận <code>/scan</code>, <code>/initialpose</code>, xuất <code>/amcl_pose</code>, <code>/particle_cloud</code> và TF <code>map-&gt;odom</code>.</td>
-  </tr>
-  <tr>
-    <td><code>goal_survey_node</code><br>(<code>goal_survey.py</code>)</td>
-    <td>Khảo sát tọa độ mục tiêu trên RViz2 và tự động lưu vào file cấu hình <code>surveyed_goals.json</code>.</td>
-    <td>Subscribe <code>/clicked_point</code> (Publish Point) và <code>/amcl_pose</code>.</td>
-  </tr>
-  <tr>
-    <td><code>auto_nav_goals</code><br>(<code>auto_nav_goals.py</code>)</td>
-    <td>Node điều khiển tự động robot rời dock, đặt Initial Pose và đi tuần tự qua 03 Goals bằng code.</td>
-    <td>Action <code>/undock</code>, <code>/navigate_to_pose</code> (<code>BasicNavigator</code>), nhận <code>/yolo/detections/summary</code>.</td>
-  </tr>
-  <tr>
-    <td><code>yolo_detector_node</code><br>(<code>yolo_detector.py</code>)</td>
-    <td>Chuyển đổi ảnh ROS 2 sang OpenCV qua <code>cv_bridge</code>, nhận diện vật thể bằng YOLOv8n.</td>
-    <td>Nhận <code>/oakd/rgb/preview/image_raw</code>, phát <code>/yolo/detections/image</code> và <code>/yolo/detections/summary</code>.</td>
-  </tr>
-</table>
-
-<div class="page-break"></div>
-
-<h2>III. KẾT QUẢ THỰC HIỆN CHI TIẾT 04 PHẦN CỦA BÀI TẬP</h2>
-
-<h3>Phần 1 – Khởi chạy Simulation &amp; Load bản đồ (Localization)</h3>
-<ul>
-  <li><strong>Khởi chạy môi trường &amp; thêm vật thể:</strong> Khởi chạy lại TurtleBot 4 Standard (có gắn Camera RGB OAK-D và RPLiDAR) trong đúng thế giới Gazebo <code>warehouse</code> đã dùng quét bản đồ tuần trước. Node <code>spawn_yolo_objects</code> tự động thêm 04 mô hình vật thể vào thế giới: <code>person_standing_goal1</code> tại (-3.20, 0.25), <code>chair_goal1</code> tại (-3.00, -0.55), <code>chair_goal2</code> tại (0.35, 2.85) và <code>table_goal2</code> tại (1.25, 3.05).</li>
-  <li><strong>Nạp bản đồ &amp; khởi chạy AMCL + Nav2:</strong> Thực thi qua script <code>./src/turtlebot4_practice4/scripts/run_part1_localization.sh</code> nạp tệp <code>maps/map.yaml</code> (độ phân giải 0.03 m/pixel) cùng với <code>amcl</code> và ngăn xếp Nav2.</li>
-  <li><strong>Thiết lập Initial Pose &amp; Kiểm tra khớp dữ liệu:</strong> Sau khi robot tự động Undock ra vị trí (x = 0.35 m, y = 0.00 m, yaw = 3.14 rad), Initial Pose được thiết lập chính xác. Trên RViz2, bản đồ hiển thị rõ nét, đám mây hạt AMCL hội tụ sát quanh thân xe và <strong>dữ liệu quét LiDAR <code>/scan</code> (màu đỏ) trùng khớp hoàn toàn với các bức tường trên bản đồ</strong>.</li>
-</ul>
-
-<h3>Phần 2 – Khảo sát và lấy tọa độ mục tiêu trên bản đồ</h3>
-<ul>
-  <li>Sử dụng công cụ <strong>Publish Point</strong> trên thanh công cụ RViz2 kết hợp chạy node khảo sát <code>ros2 run turtlebot4_practice4 goal_survey</code> (lắng nghe đồng thời <code>/clicked_point</code> và <code>/amcl_pose</code>).</li>
-  <li>Hệ thống tự động chuyển đổi Quaternion sang góc Euler <code>yaw</code> và ghi nhận tọa độ $(x, y, \text{yaw})$ trong hệ tọa độ <code>map</code> của 03 điểm mục tiêu tại 03 khu vực khác nhau vào tệp <code>config/surveyed_goals.json</code>:</li>
-</ul>
-
-<table class="content-table">
-  <tr>
-    <th>Điểm mục tiêu</th>
-    <th>Khu vực trên bản đồ (Frame: <code>map</code>)</th>
-    <th>Tọa độ chuẩn $(x, y, \text{yaw})$</th>
-    <th>Tọa độ khảo sát <code>/clicked_point</code></th>
-    <th>Đối tượng quan sát tại khu vực</th>
-  </tr>
-  <tr>
-    <td><strong>Initial Pose</strong></td>
-    <td>Vị trí xuất phát sau khi Undock</td>
-    <td>x = 0.35m, y = 0.00m, yaw = 3.14 rad</td>
-    <td>x = 0.35m, y = 0.00m, yaw = 3.14 rad</td>
-    <td>Trạm sạc &amp; Hành lang xuất phát</td>
-  </tr>
-  <tr>
-    <td><strong>Goal 1</strong></td>
-    <td>Khu vực hành lang trung tâm (Central Aisle)</td>
-    <td>x = -1.50m, y = 0.00m, yaw = 3.14 rad</td>
-    <td>x = 2.99m, y = 1.55m, yaw = 0.43 rad</td>
-    <td>Người đứng (<code>person</code>) &amp; Ghế (<code>chair</code>)</td>
-  </tr>
-  <tr>
-    <td><strong>Goal 2</strong></td>
-    <td>Khu vực hành lang phía Bắc (North Aisle)</td>
-    <td>x = 0.50m, y = 1.20m, yaw = 1.57 rad</td>
-    <td>x = 3.49m, y = 5.37m, yaw = 1.44 rad</td>
-    <td>Ghế gấp (<code>chair</code>) &amp; Bàn (<code>dining table</code>)</td>
-  </tr>
-  <tr>
-    <td><strong>Goal 3</strong></td>
-    <td>Khu vực nhân viên &amp; Trạm sạc (South-East)</td>
-    <td>x = 0.35m, y = 0.00m, yaw = -0.99 rad</td>
-    <td>x = -2.26m, y = 5.18m, yaw = -3.11 rad</td>
-    <td>Nhân viên kho (<code>person</code>) &amp; Kệ hàng</td>
-  </tr>
-</table>
-
-<h3>Phần 3 – Lập trình Navigation tự động với Nav2 (Bằng Code)</h3>
-<ul>
-  <li>Viết chương trình ROS 2 Node bằng Python <strong><code>auto_nav_goals.py</code></strong> kế thừa lớp <code>BasicNavigator</code> từ thư viện <code>nav2_simple_commander</code> để gửi tuần tự 03 điểm <strong>Goal 1 &rarr; Goal 2 &rarr; Goal 3</strong> qua Action <code>/navigate_to_pose</code>.</li>
-  <li>Sau khi khởi chạy bằng lệnh <code>./src/turtlebot4_practice4/scripts/run_part3_auto_nav.sh</code>, <strong>hoàn toàn không điều khiển thủ công và không dùng chuột đặt goal trên RViz2</strong>.</li>
-  <li>Robot tự động lập kế hoạch đường đi toàn cục (<code>NavfnPlanner</code>), điều khiển vận tốc cục bộ né vật cản (<code>DWBLocalPlanner</code>), tiến vào từng điểm đích an toàn tuyệt đối (không va chạm) và dừng lại 3.5 giây tại mỗi Goal để camera OAK-D quét nhận diện vật thể.</li>
-</ul>
-
-<h3>Phần 4 – Nhận diện vật thể từ Camera với YOLO</h3>
-<ul>
-  <li>Viết ROS 2 Node <strong><code>yolo_detector.py</code></strong> tích hợp đồng bộ với Node điều hướng thông qua các bước xử lý:
-    <ol>
-      <li><strong>Subscribe:</strong> Nhận dữ liệu ảnh màu từ camera RGB của TurtleBot 4 qua topic <code>/oakd/rgb/preview/image_raw</code> (kiểu <code>sensor_msgs/msg/Image</code>) và vị trí robot từ <code>/amcl_pose</code>.</li>
-      <li><strong>Chuyển đổi <code>cv_bridge</code>:</strong> Sử dụng lớp <code>CompatCvBridge</code> chuyển đổi message ảnh ROS 2 sang mảng OpenCV <code>bgr8</code>.</li>
-      <li><strong>Suy luận mô hình YOLOv8:</strong> Đưa ảnh qua mô hình <code>yolov8n.pt</code> (Ultralytics) để phát hiện các vật thể trong môi trường Gazebo (<code>person</code>, <code>chair</code>, <code>dining table</code>, <code>bench</code>...).</li>
-      <li><strong>Hiển thị &amp; Xuất kết quả:</strong> Vẽ Bounding Box, tên class, độ tự tin (%) và thanh HUD lên cửa sổ OpenCV (<code>cv2.imshow</code>), đồng thời publish ngược lại lên topic <code>/yolo/detections/image</code> để xem trực tiếp trên <strong>RViz2</strong> và in log nhận diện kèm tọa độ robot ra màn hình <strong>Terminal</strong>.</li>
-    </ol>
-  </li>
-</ul>
-
-<div class="alert-box">
-  <strong>Kết quả thực thi tích hợp 03 Goals &amp; YOLOv8:</strong><br>
-  &bull; <strong>Goal 1 (2.99, 1.55, yaw=0.43):</strong> Hoàn thành điều hướng (<span class="badge badge-pass">SUCCEEDED - 16.6s</span>) &mdash; YOLOv8 phát hiện: <code>umbrella (35.8%)</code>, <code>person (86.4%)</code>, <code>chair (64.2%)</code>.<br>
-  &bull; <strong>Goal 2 (3.49, 5.37, yaw=1.44):</strong> Hoàn thành điều hướng (<span class="badge badge-pass">SUCCEEDED - 14.8s</span>) &mdash; YOLOv8 phát hiện: <code>chair (78.5%)</code>, <code>dining table / bench (61.8%)</code>.<br>
-  &bull; <strong>Goal 3 (-2.26, 5.18, yaw=-3.11):</strong> Hoàn thành điều hướng (<span class="badge badge-pass">SUCCEEDED - 12.2s</span>) &mdash; YOLOv8 phát hiện: <code>person (82.1%)</code>.<br>
-  &bull; <strong>Đánh giá:</strong> 3/3 Goals thành công 100%, robot tự hành mượt mà không va chạm, hiển thị trực quan đồng thời trên cả OpenCV, RViz2 và Terminal.
-</div>
-
-<div style="text-align:center; margin: 12px 0;">
-  <img src="figures/demo_nav2_yolo.png" alt="Toàn cảnh hệ thống thực nghiệm" style="max-width:100%; border:1px solid #d1d5da; border-radius:6px;">
-  <p style="font-size:9pt; color:#586069; font-style:italic; margin-top:4px;">
-    Hình thực nghiệm: Gazebo (trái trên), RViz2 kèm Localization &amp; Nav2 (phải trên), cửa sổ OpenCV YOLOv8 (trái dưới) và Terminal điều hướng tự động qua 03 Goals (phải dưới).
+  <h2>1. Sơ Đồ Kiến Trúc Hệ Thống</h2>
+  <p>
+    Hệ thống nhận diện cử chỉ tay qua webcam laptop bằng <strong>MediaPipe Gesture Recognizer</strong> kết hợp <strong>OpenCV</strong> và điều khiển hành vi của robot <strong>TurtleBot 4 Standard</strong> trong môi trường <strong>Gazebo Fortress</strong> kèm bản đồ định vị <strong>RViz2</strong> trên nền tảng <strong>ROS 2 Humble</strong>:
   </p>
-</div>
+  <pre>
+[TẦNG 1: WEBCAM &amp; AI MEDIAPIPE (gesture_recognition_node)]
+  Webcam Laptop (/dev/video0) --&gt; OpenCV --&gt; MediaPipe Gesture Recognizer (21 Hand Landmarks)
+  --&gt; Phân loại 06 cử chỉ + Dynamic Wave Detector --&gt; Bộ lọc chống nhiễu Temporal Debounce
+  --&gt; Hiển thị HUD trên cửa sổ OpenCV &amp; Publish topic /detected_gesture (std_msgs/msg/String)
+                                      |
+                                      v
+[TẦNG 2: MÁY TRẠNG THÁI ĐIỀU KHIỂN HÀNH VI (robot_behavior_node)]
+  Subscribe /detected_gesture, /scan, /odom --&gt; FSM 4 trạng thái:
+  (1) IDLE (Chờ lệnh) --&gt; [Wave / Pointing_Up / Victory] --&gt; (2) SELECTED (Chờ xác nhận)
+  (2) SELECTED        --&gt; [Thumbs_Up (Xác nhận)]         --&gt; (3) EXECUTING (Thực thi hành vi)
+  (3) EXECUTING       --&gt; [Open_Palm / Timeout / LiDAR]  --&gt; (4) STOPPED (Dừng khẩn cấp)
+  (Mọi trạng thái)    --&gt; [Closed_Fist (Hủy hành vi)]    --&gt; (1) IDLE (Trạng thái chờ)
+                                      |
+                                      v  Publish /cmd_vel (geometry_msgs/msg/Twist @ 20 Hz)
+[TẦNG 3: MÔ PHỎNG GAZEBO FORTRESS &amp; BẢN ĐỒ ĐỊNH VỊ RVIZ2]
+  - TurtleBot 4 Standard (Create 3 safety_override='full' hỗ trợ cả tiến và lùi)
+  - Auto Undock &amp; di chuyển 0.90m ra khu vực trung tâm rộng thoáng, không va chạm
+  - RViz2 + Map Server + AMCL hiển thị bản đồ map.yaml đã lưu, RobotModel và tia quét /scan
+  </pre>
 
-<h2>IV. HƯỚNG DẪN CHẠY CHƯƠNG TRÌNH &amp; ĐẨY LÊN GITHUB</h2>
-<pre>
-# 1. Build workspace
-cd /home/tuan/turtelbot4_ws &amp;&amp; colcon build --symlink-install &amp;&amp; source install/setup.bash
+  <h2>2. Giải Thích Các Node, Topic Và Luồng Xử Lý</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Tên Node / Topic</th>
+        <th>Loại / Kiểu dữ liệu</th>
+        <th>Vai trò và luồng xử lý</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>webcam_cmdvel_check</code></td>
+        <td>ROS 2 Node (Phần 1)</td>
+        <td>Kiểm tra robot nhận lệnh vận tốc qua <code>/cmd_vel</code> (tiến, lùi, xoay trái–phải) trong Gazebo và đọc/hiển thị hình ảnh từ webcam laptop bằng OpenCV.</td>
+      </tr>
+      <tr>
+        <td><code>gesture_recognition_node</code></td>
+        <td>ROS 2 Node (Phần 2)</td>
+        <td>Đọc hình ảnh từ webcam bằng OpenCV, nhận diện 06 cử chỉ tay bằng MediaPipe Gesture Recognizer, hiển thị tên cử chỉ + độ tin cậy (%) trên cửa sổ webcam và publish lên <code>/detected_gesture</code>.</td>
+      </tr>
+      <tr>
+        <td><code>robot_behavior_node</code></td>
+        <td>ROS 2 Node (Phần 3)</td>
+        <td>Subscribe <code>/detected_gesture</code>, vận hành máy trạng thái FSM yêu cầu xác nhận bằng <code>Thumbs_Up</code>, chống nhiễu, watchdog mất tín hiệu và điều khiển TurtleBot 4 qua <code>/cmd_vel</code>.</td>
+      </tr>
+      <tr>
+        <td><code>/detected_gesture</code></td>
+        <td><code>std_msgs/msg/String</code></td>
+        <td>Topic truyền nhãn cử chỉ tay đã lọc chống nhiễu (<code>Wave</code>, <code>Pointing_Up</code>, <code>Victory</code>, <code>Thumbs_Up</code>, <code>Open_Palm</code>, <code>Closed_Fist</code>, <code>None</code>) ở tần số 15 Hz.</td>
+      </tr>
+      <tr>
+        <td><code>/cmd_vel</code></td>
+        <td><code>geometry_msgs/msg/Twist</code></td>
+        <td>Topic điều khiển vận tốc dài (<code>linear.x</code>) và vận tốc góc (<code>angular.z</code>) của TurtleBot 4 ở tần số 20 Hz.</td>
+      </tr>
+      <tr>
+        <td><code>/robot_behavior_status</code></td>
+        <td><code>std_msgs/msg/String</code></td>
+        <td>Topic đồng bộ trạng thái FSM của robot lên màn hình HUD của cửa sổ Webcam OpenCV.</td>
+      </tr>
+    </tbody>
+  </table>
 
-# 2. Chạy tích hợp toàn bộ Phần 1 + Phần 3 + Phần 4 (hoặc chạy từng script trong thư mục scripts/):
-./src/turtlebot4_practice4/scripts/run_part4_navigation.sh
+  <h2>3. Bảng Ánh Xạ Cử Chỉ Tay Và Hành Vi Robot</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Cử chỉ tay</th>
+        <th>Nhãn <code>/detected_gesture</code></th>
+        <th>Hành vi của TurtleBot 4 &amp; Thông số điều khiển</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><strong>Vẫy tay (Wave)</strong></td>
+        <td><code>Wave</code></td>
+        <td><strong>Chọn hành vi: Robot xoay trái–phải để chào lại.</strong> Khi xác nhận: thực hiện 4 pha xoay đối xứng (&omega; = &plusmn;0.85 rad/s) lắc chào trái–phải và quay về đúng góc ban đầu.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>Giơ 1 ngón tay (Pointing Up)</strong></td>
+        <td><code>Pointing_Up</code></td>
+        <td><strong>Chọn hành vi: Tiến–lùi 4 lần.</strong> Khi xác nhận: lặp 4 chu kỳ liên tiếp (tiến <em>v</em> = +0.20 m/s trong 1.8s, nghỉ 0.35s, lùi <em>v</em> = -0.20 m/s trong 1.8s, nghỉ 0.35s).</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>Giơ 2 ngón tay (Victory)</strong></td>
+        <td><code>Victory</code></td>
+        <td><strong>Chọn hành vi: Di chuyển theo quỹ đạo tròn.</strong> Khi xác nhận: phát đồng thời <em>v</em> = 0.18 m/s và &omega; = 0.45 rad/s tạo quỹ đạo tròn bán kính <em>R</em> = 0.40 m khép kín 360&deg;.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><strong>Giơ ngón cái (Thumbs Up)</strong></td>
+        <td><code>Thumbs_Up</code></td>
+        <td><strong>Xác nhận và thực hiện hành vi đã chọn</strong> (chuyển FSM từ <code>SELECTED</code> sang <code>EXECUTING</code>).</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><strong>Xòe bàn tay (Open Palm)</strong></td>
+        <td><code>Open_Palm</code></td>
+        <td><strong>Robot dừng ngay lập tức</strong> (phát tức thời <code>Twist(0, 0)</code> lên <code>/cmd_vel</code>, chuyển sang <code>STOPPED</code>).</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><strong>Nắm tay (Closed Fist)</strong></td>
+        <td><code>Closed_Fist</code></td>
+        <td><strong>Hủy hành vi hiện tại</strong> và đưa robot trở về trạng thái chờ (<code>IDLE</code>).</td>
+      </tr>
+    </tbody>
+  </table>
 
-# 3. Đẩy toàn bộ dự án lên GitHub Repository (Turtlebot_sim_test2.git):
-cd /home/tuan/turtelbot4_ws/src
-git remote set-url origin https://github.com/Tuan404cl/Turtlebot_sim_test2.git
-git add .
-git commit -m "Hoan thanh Bai tap TurtleBot 4: AMCL Localization, Auto Nav2 (03 Goals) va YOLOv8 Object Detection"
-git branch -M main
-git push -u origin main
-</pre>
+  <h2>4. Hình Ảnh Minh Họa Kết Quả Thực Nghiệm</h2>
+  <div class="figure">
+    <img src="figures/demo_gesture_control.png" alt="Kết quả thực nghiệm điều khiển TurtleBot 4 bằng cử chỉ tay AI" />
+    <div class="caption">
+      Hình 1: Toàn cảnh hệ thống đang vận hành: Terminal Log (trái trên), Gazebo Simulation với TurtleBot 4 ở khu vực rộng thoáng (trái dưới), RViz2 hiển thị bản đồ đã lưu &amp; AMCL (phải trên), và cửa sổ Webcam AI MediaPipe nhận diện cử chỉ Wave với độ tin cậy 99.0% (phải dưới).
+    </div>
+  </div>
 
+  <h2>5. Link Video Demo Và GitHub Repository</h2>
+  <ul>
+    <li><strong>GitHub Repository (Public):</strong> <a href="https://github.com/Tuan404cl/Turtlebot_sim_test3.git">https://github.com/Tuan404cl/Turtlebot_sim_test3.git</a></li>
+    <li><strong>Video Demo (Google Drive – Công khai):</strong> <a href="https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=drive_link">https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=drive_link</a></li>
+  </ul>
 </body>
 </html>
