@@ -55,7 +55,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\textit{ĐHQGHN - Trường ĐH Công nghệ}}
-\fancyhead[R]{\small\textit{Bài tập 6: Giao tiếp phi ngôn ngữ \& Điều khiển TurtleBot 4 bằng cử chỉ tay}}
+\fancyhead[R]{\small\textit{Báo cáo Bài tập 6: Điều khiển TurtleBot 4 bằng cử chỉ tay AI}}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
@@ -314,24 +314,81 @@ Hình~\ref{fig:system_arch} biểu diễn kiến trúc phân tầng của hệ t
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-  node distance=12mm and 18mm,
-  statebox/.style={rectangle, draw=primary, fill=boxbg, rounded corners=4pt, line width=1.0pt, font=\footnotesize\bfseries, align=center, inner sep=6pt, minimum width=3.5cm, minimum height=1.2cm},
-  stopbox/.style={rectangle, draw=accent, fill=red!8, rounded corners=4pt, line width=1.0pt, font=\footnotesize\bfseries, align=center, inner sep=6pt, minimum width=3.5cm, minimum height=1.2cm},
-  trans/.style={-Stealth, thick, color=primary},
-  stoptrans/.style={-Stealth, thick, color=accent}
+  statebox/.style={
+    rectangle,
+    draw=primary,
+    fill=boxbg,
+    rounded corners=4pt,
+    line width=1.0pt,
+    font=\footnotesize\bfseries,
+    align=center,
+    inner sep=5pt,
+    text width=4.7cm,
+    minimum height=1.55cm
+  },
+  stopbox/.style={
+    rectangle,
+    draw=accent,
+    fill=red!8,
+    rounded corners=4pt,
+    line width=1.0pt,
+    font=\footnotesize\bfseries,
+    align=center,
+    inner sep=5pt,
+    text width=4.7cm,
+    minimum height=1.55cm
+  },
+  trans/.style={-Stealth, line width=0.9pt, color=primary},
+  stoptrans/.style={-Stealth, line width=0.9pt, color=accent},
+  lbl/.style={font=\scriptsize, fill=white, inner sep=1.5pt, align=center}
 ]
-  \node[statebox] (idle) {\color{primary}1. IDLE\\{\scriptsize (Trạng thái chờ lệnh)}\\{\scriptsize $v = 0, \omega = 0$}};
-  \node[statebox, right=28mm of idle] (selected) {\color{secondary}2. SELECTED\\{\scriptsize (Đã chọn hành vi chờ xác nhận)}\\{\scriptsize Lưu \texttt{Wave / Pointing\_Up / Victory}}};
-  \node[statebox, below=16mm of selected] (executing) {\color{commentgreen}3. EXECUTING\\{\scriptsize (Đang thực hiện hành vi)}\\{\scriptsize Phát \texttt{/cmd\_vel} ở 20 Hz}};
-  \node[stopbox, below=16mm of idle] (stopped) {\color{accent}4. STOPPED\\{\scriptsize (Dừng khẩn cấp / Timeout)}\\{\scriptsize Phanh tức thì $v = 0, \omega = 0$}};
+  % Bố cục lưới 2x2 đồng nhất kích thước tuyệt đối
+  \node[statebox] (idle) at (0, 0) {
+    {\color{primary}1. IDLE}\\
+    {\scriptsize\normalfont (Trạng thái chờ lệnh)}\\
+    {\scriptsize\normalfont $v = 0,\; \omega = 0$}
+  };
 
-  \draw[trans] (idle) -- node[above, font=\scriptsize, align=center] {\texttt{Wave / Pointing\_Up}\\\texttt{/ Victory}} (selected);
-  \draw[trans] (selected) -- node[right, font=\scriptsize, align=left] {\textbf{Xác nhận:}\\\texttt{Thumbs\_Up}} (executing);
-  \draw[trans] (executing) -- node[above, sloped, font=\scriptsize] {Hoàn thành / \texttt{Closed\_Fist} (Hủy)} (idle);
-  \draw[trans, bend left=18] (selected) to node[below, font=\scriptsize] {\texttt{Closed\_Fist} (Hủy chọn)} (idle);
-  \draw[stoptrans] (executing) -- node[below, font=\scriptsize, align=center] {\texttt{Open\_Palm} (Dừng ngay)\\hoặc Mất tín hiệu / Vật cản} (stopped);
-  \draw[trans] (stopped) -- node[left, font=\scriptsize] {\texttt{Closed\_Fist} (Reset)} (idle);
-  \draw[trans, bend left=15] (stopped) to node[above, sloped, font=\scriptsize] {Chọn hành vi mới} (selected);
+  \node[statebox] (selected) at (9.8, 0) {
+    {\color{secondary}2. SELECTED}\\
+    {\scriptsize\normalfont (Đã chọn hành vi chờ xác nhận)}\\
+    {\tiny\ttfamily Wave | Pointing\_Up | Victory}
+  };
+
+  \node[stopbox] (stopped) at (0, -3.8) {
+    {\color{accent}4. STOPPED}\\
+    {\scriptsize\normalfont (Dừng khẩn cấp / Timeout)}\\
+    {\scriptsize\normalfont Phanh tức thì $v = 0,\; \omega = 0$}
+  };
+
+  \node[statebox] (executing) at (9.8, -3.8) {
+    {\color{commentgreen}3. EXECUTING}\\
+    {\scriptsize\normalfont (Đang thực hiện hành vi)}\\
+    {\scriptsize\normalfont Phát \texttt{/cmd\_vel} ở 20 Hz}
+  };
+
+  % 1. IDLE <-> 2. SELECTED (2 mũi tên song song trên/dưới)
+  \draw[trans] ([yshift=3.8mm]idle.east) -- node[above=2pt, font=\scriptsize, align=center]
+    {Chọn hành vi:\\\texttt{Wave / Pointing\_Up / Victory}} ([yshift=3.8mm]selected.west);
+
+  \draw[trans] ([yshift=-1.8mm]selected.west) -- node[below=1.5pt, font=\scriptsize, align=center]
+    {\texttt{Closed\_Fist} (Hủy chọn)} ([yshift=-1.8mm]idle.east);
+
+  % 2. SELECTED -> 3. EXECUTING
+  \draw[trans] (selected.south) -- node[right=4pt, font=\scriptsize, align=left]
+    {\textbf{Xác nhận:}\\\texttt{Thumbs\_Up}} (executing.north);
+
+  % 3. EXECUTING -> 4. STOPPED
+  \draw[stoptrans] (executing.west) -- node[below=2pt, font=\scriptsize, align=center, text=accent]
+    {\texttt{Open\_Palm} (Dừng ngay)\\hoặc Mất tín hiệu / Vật cản} (stopped.east);
+
+  % 4. STOPPED -> 1. IDLE
+  \draw[trans] (stopped.north) -- node[left=4pt, font=\scriptsize, align=right]
+    {\texttt{Closed\_Fist} (Reset)\\hoặc Chọn mới} (idle.south);
+
+  % 3. EXECUTING -> 1. IDLE (Đường chéo ở giữa thoáng, không chạm chữ)
+  \draw[trans] ([yshift=-2mm]executing.north west) -- node[lbl, sloped, pos=0.5]
+    {Hoàn thành / \texttt{Closed\_Fist}} ([yshift=-2mm]idle.south east);
 \end{tikzpicture}
 \caption{Sơ đồ chuyển trạng thái FSM trong \texttt{robot\_behavior\_node}}
 \label{fig:fsm_flow}
