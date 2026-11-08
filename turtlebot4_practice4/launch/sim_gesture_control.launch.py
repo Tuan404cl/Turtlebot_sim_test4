@@ -123,7 +123,7 @@ def generate_launch_description():
     )
     delayed_tf_relay = TimerAction(period=3.0, actions=[tf_relay_node])
 
-    # 3. Localization (Map Server + AMCL) nạp bản đồ đã lưu ở giây thứ 6 (khi robot đang ở dock 0,0,0)
+    # 3. Localization (Map Server + AMCL) nạp bản đồ đã lưu ở giây thứ 10 (khi robot đã spawn trên dock 0,0,0)
     localization = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([tb4_loc_launch]),
         launch_arguments=[
@@ -133,9 +133,9 @@ def generate_launch_description():
             ('use_sim_time', LaunchConfiguration('use_sim_time')),
         ],
     )
-    delayed_localization = TimerAction(period=6.0, actions=[localization])
+    delayed_localization = TimerAction(period=10.0, actions=[localization])
 
-    # 4. RViz2 hiển thị bản đồ (map.yaml), RobotModel, LaserScan (/scan) và AMCL ParticleCloud (sau 6s)
+    # 4. RViz2 hiển thị bản đồ (map.yaml), RobotModel, LaserScan (/scan) và AMCL ParticleCloud (sau 10s)
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -145,7 +145,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
         condition=IfCondition(LaunchConfiguration('rviz')),
     )
-    delayed_rviz = TimerAction(period=6.0, actions=[rviz_node])
+    delayed_rviz = TimerAction(period=10.0, actions=[rviz_node])
 
     # 5. Auto Undock + Di chuyển ra khoảng trống trung tâm (sau 16s để AMCL đã khớp xong bản đồ tại dock)
     undock_node = Node(

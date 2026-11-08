@@ -55,7 +55,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\textit{ĐHQGHN - Trường ĐH Công nghệ}}
-\fancyhead[R]{\small\textit{Báo cáo Bài tập 6: Điều khiển TurtleBot 4 bằng cử chỉ tay AI}}
+\fancyhead[R]{\small\textit{Báo cáo Bài tập 7: Phân vùng Bản đồ \& Điều hướng Giọng nói Nav2}}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
@@ -108,14 +108,14 @@
 
     \includegraphics[width=3.2cm]{figures/uet_logo.png}\\[20pt]
 
-    {\Large\bfseries BÁO CÁO BÀI TẬP THỰC HÀNH 06}\\[14pt]
+    {\Large\bfseries BÁO CÁO BÀI TẬP THỰC HÀNH 07}\\[14pt]
     
-    {\Huge\bfseries\color{primary} GIAO TIẾP PHI NGÔN NGỮ}\\[6pt]
-    {\Huge\bfseries\color{primary} VÀ ĐIỀU KHIỂN TURTLEBOT 4}\\[6pt]
-    {\Huge\bfseries\color{primary} BẰNG CỬ CHỈ TAY AI}\\[14pt]
+    {\Huge\bfseries\color{primary} PHÂN VÙNG BẢN ĐỒ NGỮ NGHĨA}\\[6pt]
+    {\Huge\bfseries\color{primary} VÀ ĐIỀU HƯỚNG TURTLEBOT 4}\\[6pt]
+    {\Huge\bfseries\color{primary} BẰNG CÂU LỆNH GIỌNG NÓI}\\[14pt]
     
-    {\large\bfseries NON-VERBAL HUMAN--ROBOT INTERACTION}\\[4pt]
-    {\large\bfseries USING HAND GESTURE RECOGNITION (MEDIAPIPE \& OPENCV)}\\[34pt]
+    {\large\bfseries SEMANTIC MAP SEGMENTATION \& VOICE-CONTROLLED}\\[4pt]
+    {\large\bfseries AUTONOMOUS NAVIGATION WITH NAV2 (ROS 2 HUMBLE)}\\[34pt]
 
     \vfill
 
@@ -147,49 +147,50 @@
 \section{TỔNG QUAN HỆ THỐNG \& SƠ ĐỒ KIẾN TRÚC}
 
 \subsection{Mục tiêu bài thực hành}
-Bài thực hành số 6 xây dựng hệ thống tương tác Người -- Robot phi ngôn ngữ (\textit{Non-verbal Human--Robot Interaction}) cho phép nhận diện cử chỉ bàn tay theo thời gian thực qua webcam laptop bằng trí tuệ nhân tạo (\textbf{MediaPipe Gesture Recognizer} kết hợp \textbf{OpenCV}) và điều khiển hành vi chuyển động của robot tự hành \textbf{TurtleBot 4 Standard} trong môi trường mô phỏng \textbf{Gazebo Fortress} cùng bản đồ định vị \textbf{RViz2} thông qua nền tảng \textbf{ROS 2 Humble}:
+Bài thực hành số 7 xây dựng một hệ thống hoàn chỉnh cho phép robot tự hành \textbf{TurtleBot 4 Standard} nhận biết các khu vực chức năng trên bản đồ nhà kho thông qua xử lý ảnh bản đồ 2D và thực hiện điều hướng tự động thông qua câu lệnh giọng nói tiếng Việt nhận trực tiếp từ Microphone phần cứng:
 \begin{enumerate}
-  \item \textbf{Phần 1 -- Khởi chạy Simulation và Webcam:} Khởi chạy TurtleBot 4 trong môi trường Gazebo (\texttt{warehouse}), nạp bản đồ 2D đã lưu lên RViz2, tự động rời trạm sạc ra vùng rộng thoáng, kiểm tra robot nhận lệnh vận tốc qua topic \texttt{/cmd\_vel} và sử dụng OpenCV để đọc/hiển thị hình ảnh thời gian thực từ webcam laptop.
-  \item \textbf{Phần 2 -- Nhận diện cử chỉ tay bằng AI (\texttt{gesture\_recognition\_node}):} Đọc khung hình từ webcam bằng OpenCV, sử dụng mô hình \textbf{MediaPipe Gesture Recognizer} (\texttt{gesture\_recognizer.task}) kết hợp phân tích động học 21 điểm khớp bàn tay (\textit{21 Hand Landmarks}) để phát hiện và phân loại chính xác \textbf{06 cử chỉ tay}, hiển thị tên cử chỉ cùng độ tin cậy nhận diện trên cửa sổ webcam và publish lên topic \texttt{/detected\_gesture} (\texttt{std\_msgs/msg/String}).
-  \item \textbf{Phần 3 -- Điều khiển hành vi TurtleBot 4 (\texttt{robot\_behavior\_node}):} Subscribe kết quả nhận diện từ \texttt{/detected\_gesture} và điều khiển TurtleBot 4 qua topic \texttt{/cmd\_vel} bằng máy trạng thái hữu hạn (\textit{Finite State Machine -- FSM}) tuân thủ nghiêm ngặt cơ chế \textbf{chọn hành vi trước -- xác nhận bằng \texttt{Thumbs\_Up} sau}, chống nhiễu kích hoạt lặp lệnh, tự động dừng ngay khi nhận cử chỉ dừng (\texttt{Open\_Palm}) hoặc khi mất tín hiệu điều khiển (\textit{Watchdog Timeout}), và giám sát khoảng cách an toàn qua LiDAR (\texttt{/scan}).
+  \item \textbf{Phân vùng bản đồ (Map Segmentation) \& Gắn nhãn ngữ nghĩa (Semantic Mapping):} Đọc ảnh bản đồ lưới chiếm dụng 2D (\texttt{maps/map.pgm} và \texttt{maps/map.yaml}), áp dụng các thuật toán OpenCV (phân ngưỡng nhị phân, lọc hình thái học, biến đổi khoảng cách Euclid L2 và phân vùng Watershed có hạt giống điều khiển) để chia không gian nhà kho thành \textbf{05 khu vực chức năng} riêng biệt: Khu nhập hàng (A), Khu phân loại (B), Khu xuất hàng (C), Khu kệ hàng (D), và Trạm sạc (E). Tự động tính toán điểm đích có độ an toàn (Clearance) tối ưu cách xa vật cản ($D \ge 1.70\text{ m}$) và xuất cấu hình sang \texttt{semantic\_regions.json} và \texttt{semantic\_regions.yaml}.
+  \item \textbf{Nhận dạng giọng nói trực tiếp từ Microphone (\texttt{voice\_command\_node}):} Thu âm tín hiệu âm thanh trực tiếp từ microphone phần cứng laptop qua ALSA/PulseAudio chuẩn PCM 16kHz, 16-bit Mono (hoàn toàn không sử dụng file âm thanh \texttt{.wav} thu sẵn). Hỗ trợ chế độ \textbf{Push-to-Talk} (\texttt{SPACE} / \texttt{R}) và \textbf{Auto-Listen VAD} (\texttt{M}) dựa trên mức năng lượng hiệu dụng RMS ($\ge 0.012$). Tích hợp công nghệ nhận dạng \textbf{SpeechRecognition (\texttt{vi-VN})} kết hợp mô hình AI Offline \textbf{Faster-Whisper (\texttt{base-int8})} để chuyển đổi câu lệnh tiếng Việt thành văn bản và publish lên topic \texttt{/voice\_command}.
+  \item \textbf{Điều hướng tự hành Nav2 \& Chuỗi câu lệnh liên hoàn (\texttt{voice\_navigation\_node}):} Phân tích ngữ pháp câu lệnh tiếng Việt bóc tách lộ trình từ lệnh đơn (\texttt{SINGLE\_GOAL}), lệnh 2--3 chặng, đến \textbf{chuỗi liên hoàn $N$ trạm bất kỳ ($N=5$)} như \textit{``qua A qua B qua C qua D rồi qua E''}, \textit{``Đi qua A, B, C, D rồi đến E''}, hoặc \textit{``Đi từ A qua B, C, D rồi về E''}. Tự động kiểm tra vị trí hiện tại qua \texttt{/amcl\_pose} để lược bỏ trạm đầu nếu robot đã ở sẵn; từ chối an toàn toàn bộ lộ trình khi gặp vùng không tồn tại (\texttt{INVALID\_REGION}); đồng thời hiển thị trực quan lộ trình dự kiến (\texttt{Path}) màu vàng neon và bảng số thứ tự chặng {\normalfont >>~}\texttt{STEP X}{\normalfont~<<} trên RViz2 và bản đồ OpenCV riêng.
 \end{enumerate}
 
 \subsection{Cấu trúc thư mục gói chương trình trong \texttt{src/}}
-Toàn bộ mã nguồn của bài tập được đóng gói trong package \texttt{turtlebot4\_practice4}:
+Toàn bộ mã nguồn của bài tập được tổ chức khoa học trong package \texttt{turtlebot4\_practice4}:
 
 \begin{lstlisting}[language=bash]
 turtlebot4_ws/src/
 |-- turtlebot4_practice4/
-|   |-- package.xml                           # Khai bao phu thuoc ROS 2 (rclpy, std_msgs, geometry_msgs...)
+|   |-- package.xml                           # Khai bao phu thuoc ROS 2 (nav2\_simple\_commander, cv_bridge...)
 |   |-- setup.py                              # Cau hinh entry_points cho cac ROS 2 Nodes
 |   |-- turtlebot4_practice4/
-|   |   |-- webcam_cmdvel_check.py            # (Phan 1) Kiem tra /cmd_vel va hien thi Webcam OpenCV
-|   |   |-- gesture_recognition_node.py       # (Phan 2) Node AI nhan dien 06 cu chi tay (MediaPipe)
-|   |   |-- robot_behavior_node.py            # (Phan 3) Node FSM dieu khien hanh vi TurtleBot 4
-|   |   |-- auto_undock.py                    # Tu dong Undock va dua robot ra khu vuc trung tam rong rai
-|   |   `-- tf_relay.py                       # Dong bo TF va cung cap mock hardware services
+|   |   |-- map_segmentation.py               # (Phan 1) Pipeline OpenCV 4 buoc phan vung ban do kho van
+|   |   |-- voice\_command\_node.py             # (Phan 2) Node thu am Microphone truc tiep & Live Studio STT
+|   |   `-- voice\_navigation\_node.py          # (Phan 3) Node NLP phan tich chuoi N tram & dieu phoi Nav2
 |   |-- launch/
-|   |   |-- sim_gesture_control.launch.py     # Launch tich hop: Gazebo + Map/AMCL + RViz2 + Gesture AI
-|   |   `-- sim_robot.launch.py               # Launch Gazebo Simulation co ban
+|   |   |-- sim_voice_navigation.launch.py    # Launch tich hop: Gazebo + Nav2 + Map/AMCL + Voice Studio
+|   |   `-- sim_robot.launch.py               # Launch Gazebo Simulation (TurtleBot 4 Standard)
 |   |-- config/
-|   |   |-- gesture_recognizer.task           # Model AI MediaPipe Gesture Recognizer (Float16 TFLite)
-|   |   |-- localization_params.yaml          # Cau hinh tham so AMCL va Map Server
+|   |   |-- semantic_regions.json             # Toa do ROS, ranh gioi, ban kinh an toan & tu khoa 5 vung
+|   |   |-- semantic_regions.yaml             # Dinh dang YAML cua 05 khu vuc kho van
+|   |   |-- nav2_params.yaml                  # Tham so bo dieu phoi Nav2 (Costmaps, DWB, NavFn)
 |   |   |-- fastdds_udp_only.xml              # Cau hinh FastDDS UDP-only chong loi SHM deadlock
-|   |   `-- turtlebot4_nav2.rviz              # Giao dien RViz2 hien thi Map, RobotModel, Scan & Camera
+|   |   `-- turtlebot4_nav2.rviz              # RViz2 cau hinh Path vang neon (/voice\_nav/planned\_path)
 |   |-- maps/
-|   |   `-- map.yaml & map.pgm                # Ban do Occupancy Grid 2D da luu tu cac bai truoc
+|   |   |-- map.yaml & map.pgm                # Ban do Occupancy Grid 2D goc cua Warehouse
+|   |   `-- map_segmented.png & .pgm          # Ban do phan vung mau sac 5 khu vuc da xu ly
 |   |-- scripts/
-|   |   |-- run_gesture_part1_sim_webcam.sh   # Script chay Phan 1: Kiem tra /cmd_vel & Webcam OpenCV
-|   |   |-- run_gesture_part2_recognition.sh  # Script chay Phan 2: Node gesture_recognition_node
-|   |   |-- run_gesture_part3_behavior.sh     # Script chay Phan 3: Node robot_behavior_node
-|   |   `-- run_gesture_all.sh                # Script chay tich hop toan bo he thong trong 1 lenh
+|   |   |-- run_voice_part1_segment_map.sh    # Script chay Phan 1: Map Segmentation
+|   |   |-- run_voice_part2_speech_test.sh    # Script chay Phan 2: Voice Command Microphone Test
+|   |   `-- run_voice_navigation_all.sh       # Script chay tich hop toan bo he thong trong 1 lenh
 |   `-- docs/
-|       `-- report.tex & bao_cao_thuc_hanh_04.(pdf|md|html)
-`-- README.md                                 # Tai lieu huong dan cai dat, build va chay chuong trinh
+|       |-- report.tex & report.pdf           # Bao cao LaTeX ky thuat day du theo chuan UET
+|       |-- bao_cao_bai_tap_07.(html|md|pdf)  # Bao cao Markdown, HTML va PDF chinh thuc
+|       `-- figures/                          # Anh minh hoa pipeline, giao dien studio va logo UET
+`-- README.md                                 # Huong dan cai dat, build va link nop bai
 \end{lstlisting}
 
 \subsection{Sơ đồ kiến trúc hệ thống (System Architecture)}
-Hình~\ref{fig:system_arch} biểu diễn kiến trúc phân tầng của hệ thống giao tiếp phi ngôn ngữ và điều khiển TurtleBot 4 bằng cử chỉ tay AI:
+Hình~\ref{fig:system_arch} biểu diễn kiến trúc phân tầng kết nối từ xử lý thị giác bản đồ 2D, thu âm nhận dạng microphone thời gian thực, bộ phân tích cú pháp NLP chuỗi liên hoàn đến ngăn xếp điều hướng tự hành Nav2:
 
 \begin{figure}[H]
 \centering
@@ -200,52 +201,52 @@ Hình~\ref{fig:system_arch} biểu diễn kiến trúc phân tầng của hệ t
   subnode/.style={rectangle, draw=secondary!70, fill=white, rounded corners=2pt, font=\scriptsize, align=center, inner sep=3.5pt},
   flowarrow/.style={-Stealth, thick, color=primary}
 ]
-  \node[layer] (layer4) {
-    \textbf{\color{primary}TẦNG 1: THU NHẬN HÌNH ẢNH WEBCAM \& NHẬN DIỆN CỬ CHỈ TAY BẰNG AI (\texttt{gesture\_recognition\_node})}\\
+  \node[layer] (layer1) {
+    \textbf{\color{primary}TẦNG 1: XỬ LÝ ẢNH BẢN ĐỒ 2D \& PHÂN VÙNG NGỮ NGHĨA KHO VẬN (\texttt{map\_segmentation.py})}\\
     \vspace{2pt}
     \begin{tabular}{ccc}
-      \tikz\node[subnode, text width=3.85cm]{\textbf{OpenCV VideoCapture}\\Đọc Webcam \texttt{/dev/video0} (640$\times$480)}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{MediaPipe Gesture Recognizer}\\21 Hand Landmarks + Dynamic Wave}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{Temporal Debounce Filter}\\Lọc chống nhiễu \& Hiển thị HUD OpenCV};
+      \tikz\node[subnode, text width=3.85cm]{\textbf{OpenCV Morphology}\\Lọc nhiễu \& Phân ngưỡng nhị phân}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Distance Transform L2}\\Tối ưu cự ly an toàn $D \ge 1.70\text{ m}$}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Watershed 5 Vùng Kho}\\Xuất \texttt{semantic\_regions.json/yaml}};
     \end{tabular}
   };
 
-  \node[layer, below=of layer4] (layer3) {
-    \textbf{\color{primary}TẦNG 2: MẠNG TRUYỀN THÔNG ROS 2 HUMBLE TOPICS (FastDDS UDP-Only)}\\
+  \node[layer, below=of layer1] (layer2) {
+    \textbf{\color{primary}TẦNG 2: THU ÂM MICROPHONE TRỰC TIẾP \& NHẬN DẠNG TIẾNG VIỆT (\texttt{voice\_command\_node.py})}\\
     \vspace{2pt}
     \begin{tabular}{ccc}
-      \tikz\node[subnode, text width=3.85cm]{\textbf{\texttt{/detected\_gesture}}\\\texttt{std\_msgs/msg/String} (15 Hz)}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{\texttt{/robot\_behavior\_status}}\\\texttt{std\_msgs/msg/String} (Đồng bộ HUD)}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{\texttt{/cmd\_vel}, \texttt{/scan}, \texttt{/odom}}\\\texttt{Twist}, \texttt{LaserScan}, \texttt{Odometry}};
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Live Hardware Mic}\\ALSA \texttt{arecord} (16kHz Mono PCM)}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Hai chế độ thu âm}\\Push-to-Talk (SPACE/R) \& VAD (M)}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Speech-to-Text kép}\\Google STT + Faster-Whisper Offline};
     \end{tabular}
   };
 
-  \node[layer, below=of layer3] (layer2) {
-    \textbf{\color{primary}TẦNG 3: MÁY TRẠNG THÁI ĐIỀU KHIỂN HÀNH VI \& AN TOÀN (\texttt{robot\_behavior\_node})}\\
+  \node[layer, below=of layer2] (layer3) {
+    \textbf{\color{primary}TẦNG 3: BỘ PHÂN TÍCH NLP CÂU LỆNH, ĐIỀU PHỐI NAV2 \& TRỰC QUAN HÓA (\texttt{voice\_navigation\_node.py})}\\
     \vspace{2pt}
     \begin{tabular}{ccc}
-      \tikz\node[subnode, text width=3.85cm]{\textbf{Finite State Machine (FSM)}\\\texttt{IDLE} $\to$ \texttt{SELECTED} $\to$ \texttt{EXECUTING}}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{Bộ sinh quỹ đạo vận tốc 20 Hz}\\Chào trái-phải / Tiến-lùi 4x / Vòng tròn}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{An toàn đa lớp}\\Watchdog Timeout + LiDAR Stop + E-Stop};
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Phân tích chuỗi liên hoàn}\\Hỗ trợ $1 \to 5$ trạm: \textit{``qua A qua B...''}}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Tối ưu điểm đầu AMCL}\\Bỏ điểm đã ở sẵn ($d \le 1.25\text{ m}$)}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Trực quan hóa lộ trình}\\Path vàng RViz2 \& Số thứ tự \textcircled{1}..\textcircled{5}};
     \end{tabular}
   };
 
-  \node[layer, below=of layer2] (layer1) {
-    \textbf{\color{primary}TẦNG 4: MÔ PHỎNG VẬT LÝ GAZEBO FORTRESS, ĐỊNH VỊ BẢN ĐỒ AMCL \& HIỂN THỊ RVIZ2}\\
+  \node[layer, below=of layer3] (layer4) {
+    \textbf{\color{primary}TẦNG 4: MÔ PHỎNG VẬT LÝ GAZEBO FORTRESS, ĐỊNH VỊ BẢN ĐỒ AMCL \& NAV2 CONTROLLER}\\
     \vspace{2pt}
     \begin{tabular}{ccc}
-      \tikz\node[subnode, text width=3.85cm]{\textbf{TurtleBot 4 Standard (Gazebo)}\\Create 3 (\texttt{safety\_override='full'})}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{Auto Undock \& Open Space}\\Rời trạm sạc ra vùng rộng $+0.90\text{ m}$}; &
-      \tikz\node[subnode, text width=3.85cm]{\textbf{RViz2 + Map Server + AMCL}\\Hiển thị \texttt{map.yaml}, \texttt{/scan}, \texttt{RobotModel}};
+      \tikz\node[subnode, text width=3.85cm]{\textbf{TurtleBot 4 Standard}\\Môi trường Warehouse 3D chân thực}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Định vị AMCL 2D}\\Hội tụ theo LiDAR \texttt{/scan} thời gian thực}; &
+      \tikz\node[subnode, text width=3.85cm]{\textbf{Nav2 Costmaps \& DWB}\\Tự hành tránh vật cản phát \texttt{/cmd\_vel}};
     \end{tabular}
   };
 
-  \draw[flowarrow] (layer4) -- (layer3);
-  \draw[flowarrow] (layer3) -- (layer2);
-  \draw[flowarrow] (layer2) -- (layer1);
+  \draw[flowarrow] (layer1) -- (layer2);
+  \draw[flowarrow] (layer2) -- (layer3);
+  \draw[flowarrow] (layer3) -- (layer4);
 \end{tikzpicture}%
 }
-\caption{Sơ đồ kiến trúc tổng thể hệ thống nhận diện cử chỉ tay AI và điều khiển hành vi TurtleBot 4}
+\caption{Sơ đồ kiến trúc tổng thể hệ thống phân vùng bản đồ nhà kho và điều hướng tự hành bằng giọng nói}
 \label{fig:system_arch}
 \end{figure}
 
@@ -256,31 +257,32 @@ Hình~\ref{fig:system_arch} biểu diễn kiến trúc phân tầng của hệ t
 
 \subsection{Vai trò của các ROS 2 Node trong hệ thống}
 \begin{enumerate}
-  \item \textbf{Node \texttt{webcam\_cmdvel\_check} (\texttt{webcam\_cmdvel\_check.py} -- Phần 1):}
+  \item \textbf{Script \texttt{map\_segmentation.py} (Tầng 1):}
   \begin{itemize}
-    \item Kiểm tra kết nối các topic của TurtleBot 4 trong Gazebo (\texttt{/odom}, \texttt{/scan}, \texttt{/cmd\_vel}).
-    \item Tự động gọi dịch vụ \texttt{/motion\_control/set\_parameters} đặt \texttt{safety\_override = 'full'} trên đế Create 3 để mở khóa giới hạn lùi mặc định, cho phép robot nhận cả vận tốc tiến ($v > 0$) và lùi ($v < 0$).
-    \item Phát chuỗi lệnh vận tốc kiểm thử (tiến, lùi, xoay trái--phải, dừng) lên \texttt{/cmd\_vel} và mở cửa sổ OpenCV hiển thị hình ảnh trực tiếp từ webcam laptop (\texttt{/dev/video0}).
+    \item Đọc trực tiếp ma trận điểm ảnh $W \times H = 603 \times 1003$ pixels từ \texttt{map.pgm} cùng độ phân giải $r = 0.05\text{ m/pixel}$ và gốc tọa độ $(x_0, y_0) = (-15.1, -25.1)\text{ m}$ từ \texttt{map.yaml}.
+    \item Thực thi chuỗi 4 thuật toán thị giác máy tính: (1) Phân ngưỡng nhị phân để tách ô trống ($I \ge 250$) khỏi vật cản và vùng chưa quét; (2) Lọc hình thái học đóng vách ngăn kệ hàng và khử đốm nhiễu; (3) Biến đổi khoảng cách Euclid L2 (\texttt{cv2.distanceTransform}) tính trường độ thông thoáng $D(u, v)$ tới vật cản gần nhất; (4) Phân vùng Watershed có hạt giống điều khiển để tách 5 khu vực kho vận.
+    \item Chuyển đổi tọa độ song ánh giữa Pixel $(u, v)$ và hệ tọa độ thực $(x, y)$ trong ROS Map:
+    \begin{equation}
+      x = x_0 + (u + 0.5) \cdot r, \qquad y = y_0 + (H - 1 - v + 0.5) \cdot r
+    \end{equation}
+    \item Tự động trích xuất điểm đích có khoảng cách an toàn cực đại ($D \ge 1.70\text{ m}$) cho mỗi vùng, lưu cấu hình vào \texttt{config/semantic\_regions.json} và \texttt{semantic\_regions.yaml}.
   \end{itemize}
 
-  \item \textbf{Node \texttt{gesture\_recognition\_node} (\texttt{gesture\_recognition\_node.py} -- Phần 2):}
+  \item \textbf{Node \texttt{voice\_command\_node.py} (Tầng 2):}
   \begin{itemize}
-    \item Đọc luồng video từ webcam laptop ở độ phân giải $640 \times 480$ bằng \texttt{cv2.VideoCapture(0)} và lật gương ngang (\texttt{cv2.flip}) để thuận tiện tương tác trực diện.
-    \item Đưa ảnh RGB qua mô hình \textbf{MediaPipe Gesture Recognizer} (\texttt{gesture\_recognizer.task}) để trích xuất 21 điểm khớp bàn tay (\textit{21 Hand Landmarks}) và phân loại cử chỉ tĩnh, đồng thời kết hợp bộ phát hiện dao động ngang cổ tay (\textit{Dynamic Wave Detector}) để nhận diện động tác \textbf{Vẫy tay (\texttt{Wave})}.
-    \item Áp dụng bộ lọc chống nhiễu theo thời gian (\textit{Temporal Debounce Filter}) yêu cầu cử chỉ xuất hiện ổn định và vượt ngưỡng độ tin cậy $\ge 58\%$ trước khi chốt kết quả.
-    \item Hiển thị trực quan khung xương bàn tay, hộp giới hạn, tên cử chỉ, độ tin cậy (\%), thanh khóa chống nhiễu (\textit{Anti-Noise Lock}) và trạng thái hiện tại của robot lên cửa sổ OpenCV; đồng thời publish tên cử chỉ lên topic \texttt{/detected\_gesture} (\texttt{std\_msgs/msg/String}).
+    \item Thu âm trực tiếp từ microphone máy tính bằng lệnh \texttt{arecord} (ALSA/PulseAudio) ở tần số chuẩn PCM 16kHz, 16-bit Mono (tuyệt đối không dùng file \texttt{.wav} giả lập).
+    \item Hỗ trợ hai chế độ thu âm: \textbf{Push-to-Talk} (nhấn phím \texttt{SPACE} hoặc \texttt{R} để thu 4.0s) và \textbf{Auto-Listen VAD} (nhấn phím \texttt{M} để tự động kích hoạt thu khi năng lượng âm thanh hiệu dụng $\text{RMS} \ge 0.012$).
+    \item Kết hợp mô hình nhận dạng giọng nói kép: Google Vietnamese STT (\texttt{vi-VN}) với độ trễ thấp ($0.45\text{--}0.85\text{ s}$) và mô hình AI Offline Faster-Whisper (\texttt{base-int8}) chạy trên CPU không cần mạng Internet.
+    \item Giao diện Voice Command Studio hiển thị dạng sóng âm thời gian thực, độ trễ và publish câu lệnh lên \texttt{/voice\_command} (\texttt{std\_msgs/msg/String}).
   \end{itemize}
 
-  \item \textbf{Node \texttt{robot\_behavior\_node} (\texttt{robot\_behavior\_node.py} -- Phần 3):}
+  \item \textbf{Node \texttt{voice\_navigation\_node.py} (Tầng 3):}
   \begin{itemize}
-    \item Subscribe topic \texttt{/detected\_gesture} (\texttt{std\_msgs/msg/String}), \texttt{/scan} (\texttt{LaserScan}) và \texttt{/odom} (\texttt{Odometry}).
-    \item Vận hành máy trạng thái hữu hạn (\textbf{FSM}) 4 trạng thái (\texttt{IDLE}, \texttt{SELECTED}, \texttt{EXECUTING}, \texttt{STOPPED}) điều khiển vận tốc robot qua topic \texttt{/cmd\_vel} ở tần số $20\text{ Hz}$.
-    \item Đảm bảo robot \textbf{chỉ thực thi hành vi sau khi nhận được cử chỉ xác nhận \texttt{Thumbs\_Up}}, dừng tức khắc khi nhận \texttt{Open\_Palm} hoặc khi mất tín hiệu quá $1.8\text{ s}$, và hủy hành vi về trạng thái chờ khi nhận \texttt{Closed\_Fist}.
-  \end{itemize}
-
-  \item \textbf{Node \texttt{auto\_undock} cùng \texttt{map\_server} \& \texttt{amcl}:}
-  \begin{itemize}
-    \item Nạp bản đồ \texttt{maps/map.yaml} đã lưu từ các tuần trước lên RViz2, định vị chính xác robot trên bản đồ, sau đó tự động thực hiện \texttt{/undock} và tiến thêm $0.90\text{ m}$ ra vùng trung tâm rộng thoáng để robot thực hiện mọi quỹ đạo mà không va chạm với trạm sạc hay tường.
+    \item Subscribe \texttt{/voice\_command}, vị trí hạt \texttt{/amcl\_pose} và bản đồ \texttt{/map}.
+    \item Bộ phân tích cú pháp ngôn ngữ tự nhiên (NLP Parser) chuẩn hóa tiếng Việt, bảo toàn dấu phân cách và liên từ (\textit{rồi, sau đó, tiếp tục, cuối cùng, và}) để nhận diện mượt mà chuỗi lệnh liên hoàn từ 1 đến 5 trạm dừng.
+    \item Tự động tối ưu điểm khởi hành: nếu robot cách điểm đầu $d \le 1.25\text{ m}$, trạm đầu được tự động lược bỏ; nếu gặp khu vực lạ (ví dụ vùng \texttt{Z}), hệ thống từ chối toàn bộ lệnh (\texttt{INVALID\_REGION}) và phanh dừng an toàn.
+    \item Gửi các mục tiêu tuần tự tới Nav2 qua \texttt{BasicNavigator} (\texttt{nav2\_simple\_commander}).
+    \item Publish đường đi dự kiến \texttt{Path} màu vàng neon lên topic \texttt{/voice\_nav/planned\_path} và bảng số thứ tự 3D {\normalfont >>~}\texttt{STEP X}{\normalfont~<<} trên RViz2; đồng thời mở cửa sổ bản đồ OpenCV riêng vẽ lộ trình mũi tên và đánh số thứ tự chặng (1) $\to$ (2) $\to$ (3) $\to$ (4) $\to$ (5).
   \end{itemize}
 \end{enumerate}
 
@@ -289,185 +291,118 @@ Hình~\ref{fig:system_arch} biểu diễn kiến trúc phân tầng của hệ t
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{L{3.8cm}L{4.1cm}L{1.5cm}R}
+\begin{tabularx}{\textwidth}{L{4.2cm}L{3.6cm}L{1.5cm}R}
 \toprule
 \textbf{\color{primary}Tên Topic} & \textbf{\color{primary}Kiểu Message} & \textbf{\color{primary}Tần số} & \textbf{\color{primary}Luồng dữ liệu và vai trò trong hệ thống} \\
 \midrule
-\texttt{/detected\_gesture} & \texttt{std\_msgs/msg/String} & $15\text{ Hz}$ & \textbf{Topic chính (Phần 2 $\to$ Phần 3):} Truyền nhãn cử chỉ tay đã lọc chống nhiễu (\texttt{Wave}, \texttt{Pointing\_Up}, \texttt{Victory}, \texttt{Thumbs\_Up}, \texttt{Open\_Palm}, \texttt{Closed\_Fist}, \texttt{None}). \\
+\texttt{/voice\_command} & \texttt{std\_msgs/msg/String} & Khi nhận & \textbf{Topic chính (Tầng 2 $\to$ Tầng 3):} Truyền văn bản câu lệnh tiếng Việt thu trực tiếp từ Microphone. \\
 \rowcolor{boxbg}
-\texttt{/cmd\_vel} & \texttt{geometry\_msgs/msg/Twist} & $20\text{ Hz}$ & \textbf{Topic điều khiển vận tốc:} Truyền vận tốc dài $v_x$ (\texttt{linear.x}) và vận tốc góc $\omega_z$ (\texttt{angular.z}) từ \texttt{robot\_behavior\_node} xuống bộ điều khiển vi sai của TurtleBot 4. \\
-\texttt{/robot\_behavior\_status} & \texttt{std\_msgs/msg/String} & Khi đổi / $2.5\text{ Hz}$ & Truyền trạng thái FSM hiện tại của robot ngược về \texttt{gesture\_recognition\_node} để hiển thị trực tiếp lên cửa sổ Webcam OpenCV. \\
+\texttt{/voice\_nav/planned\_path} & \texttt{nav\_msgs/msg/Path} & Khi lập lệnh & \textbf{Lộ trình dự kiến trên RViz2:} Truyền chuỗi tọa độ nối từ robot qua tất cả các Waypoint chặng (đường vàng neon). \\
+\texttt{/semantic\_regions\_markers} & \texttt{visualization\_msgs/}\newline\texttt{MarkerArray} & $1.0\text{ Hz}$ & Hiển thị nhãn 3D tên vùng, vòng tròn an toàn và huy hiệu thứ tự {\normalfont >>~}\texttt{STEP X}{\normalfont~<<} trên RViz2. \\
 \rowcolor{boxbg}
-\texttt{/scan} & \texttt{sensor\_msgs/msg/}\newline\texttt{LaserScan} & $10\text{ Hz}$ & Dữ liệu quét LiDAR $360^\circ$ dùng cho AMCL định vị trên bản đồ RViz2 và giám sát chống va chạm ($\text{dist} < 0.25\text{ m}$) trong \texttt{robot\_behavior\_node}. \\
-\texttt{/odom} & \texttt{nav\_msgs/msg/Odometry} & $20\text{--}62\text{ Hz}$ & Phản hồi vị trí $(x, y)$ và góc hướng $\text{yaw}$ thực tế của robot trong quá trình di chuyển. \\
+\texttt{/amcl\_pose} & \texttt{geometry\_msgs/msg/}\newline\texttt{PoseWithCovarianceStamped} & $10\text{ Hz}$ & Cung cấp tọa độ $(x, y)$ và hướng quay $\text{yaw}$ thực tế của robot để tối ưu điểm xuất phát. \\
+\texttt{/cmd\_vel} & \texttt{geometry\_msgs/msg/Twist} & $20\text{ Hz}$ & Vận tốc điều khiển chuyển động do Nav2 DWB Controller tính toán phát xuống đế Create 3. \\
 \rowcolor{boxbg}
-\texttt{/map} & \texttt{nav\_msgs/msg/}\newline\texttt{OccupancyGrid} & Transient & Bản đồ lưới chiếm dụng 2D (\texttt{map.yaml} \& \texttt{map.pgm}) hiển thị trực quan trên giao diện RViz2. \\
+\texttt{/scan} & \texttt{sensor\_msgs/msg/LaserScan} & $10\text{ Hz}$ & Tia quét LiDAR 2D $360^\circ$ phục vụ định vị AMCL và cập nhật chướng ngại vật trên Costmaps. \\
+\texttt{/map} & \texttt{nav\_msgs/msg/OccupancyGrid} & Transient & Bản đồ lưới chiếm dụng 2D của nhà kho được \texttt{map\_server} phân phối cho Nav2 và RViz2. \\
 \bottomrule
 \end{tabularx}
-\caption{Danh sách các ROS 2 Topic cốt lõi và luồng trao đổi dữ liệu trong hệ thống}
+\caption{Danh sách các ROS 2 Topic cốt lõi và luồng trao đổi dữ liệu trong hệ thống điều hướng giọng nói}
 \label{tab:topics}
 \end{table}
 
-\subsection{Sơ đồ Máy trạng thái hữu hạn (FSM) và luồng xử lý điều khiển}
-Để đảm bảo yêu cầu \textit{``Robot chỉ thực hiện hành vi sau khi nhận được cử chỉ xác nhận''}, luồng xử lý trong \texttt{robot\_behavior\_node} được thiết kế theo mô hình Máy trạng thái hữu hạn (Hình~\ref{fig:fsm_flow}):
-
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[
-  statebox/.style={
-    rectangle,
-    draw=primary,
-    fill=boxbg,
-    rounded corners=4pt,
-    line width=1.0pt,
-    font=\footnotesize\bfseries,
-    align=center,
-    inner sep=5pt,
-    text width=4.7cm,
-    minimum height=1.55cm
-  },
-  stopbox/.style={
-    rectangle,
-    draw=accent,
-    fill=red!8,
-    rounded corners=4pt,
-    line width=1.0pt,
-    font=\footnotesize\bfseries,
-    align=center,
-    inner sep=5pt,
-    text width=4.7cm,
-    minimum height=1.55cm
-  },
-  trans/.style={-Stealth, line width=0.9pt, color=primary},
-  stoptrans/.style={-Stealth, line width=0.9pt, color=accent},
-  lbl/.style={font=\scriptsize, fill=white, inner sep=1.5pt, align=center}
-]
-  % Bố cục lưới 2x2 đồng nhất kích thước tuyệt đối
-  \node[statebox] (idle) at (0, 0) {
-    {\color{primary}1. IDLE}\\
-    {\scriptsize\normalfont (Trạng thái chờ lệnh)}\\
-    {\scriptsize\normalfont $v = 0,\; \omega = 0$}
-  };
-
-  \node[statebox] (selected) at (9.8, 0) {
-    {\color{secondary}2. SELECTED}\\
-    {\scriptsize\normalfont (Đã chọn hành vi chờ xác nhận)}\\
-    {\tiny\ttfamily Wave | Pointing\_Up | Victory}
-  };
-
-  \node[stopbox] (stopped) at (0, -3.8) {
-    {\color{accent}4. STOPPED}\\
-    {\scriptsize\normalfont (Dừng khẩn cấp / Timeout)}\\
-    {\scriptsize\normalfont Phanh tức thì $v = 0,\; \omega = 0$}
-  };
-
-  \node[statebox] (executing) at (9.8, -3.8) {
-    {\color{commentgreen}3. EXECUTING}\\
-    {\scriptsize\normalfont (Đang thực hiện hành vi)}\\
-    {\scriptsize\normalfont Phát \texttt{/cmd\_vel} ở 20 Hz}
-  };
-
-  % 1. IDLE <-> 2. SELECTED (2 mũi tên song song trên/dưới)
-  \draw[trans] ([yshift=3.8mm]idle.east) -- node[above=2pt, font=\scriptsize, align=center]
-    {Chọn hành vi:\\\texttt{Wave / Pointing\_Up / Victory}} ([yshift=3.8mm]selected.west);
-
-  \draw[trans] ([yshift=-1.8mm]selected.west) -- node[below=1.5pt, font=\scriptsize, align=center]
-    {\texttt{Closed\_Fist} (Hủy chọn)} ([yshift=-1.8mm]idle.east);
-
-  % 2. SELECTED -> 3. EXECUTING
-  \draw[trans] (selected.south) -- node[right=4pt, font=\scriptsize, align=left]
-    {\textbf{Xác nhận:}\\\texttt{Thumbs\_Up}} (executing.north);
-
-  % 3. EXECUTING -> 4. STOPPED
-  \draw[stoptrans] (executing.west) -- node[below=2pt, font=\scriptsize, align=center, text=accent]
-    {\texttt{Open\_Palm} (Dừng ngay)\\hoặc Mất tín hiệu / Vật cản} (stopped.east);
-
-  % 4. STOPPED -> 1. IDLE
-  \draw[trans] (stopped.north) -- node[left=4pt, font=\scriptsize, align=right]
-    {\texttt{Closed\_Fist} (Reset)\\hoặc Chọn mới} (idle.south);
-
-  % 3. EXECUTING -> 1. IDLE (Đường chéo ở giữa thoáng, không chạm chữ)
-  \draw[trans] ([yshift=-2mm]executing.north west) -- node[lbl, sloped, pos=0.5]
-    {Hoàn thành / \texttt{Closed\_Fist}} ([yshift=-2mm]idle.south east);
-\end{tikzpicture}
-\caption{Sơ đồ chuyển trạng thái FSM trong \texttt{robot\_behavior\_node}}
-\label{fig:fsm_flow}
-\end{figure}
-
 % ==============================================================================
-% MỤC 3: BẢNG ÁNH XẠ CỬ CHỈ TAY VÀ HÀNH VI ROBOT
+% MỤC 3: BẢNG ÁNH XẠ KHU VỰC KHO VẬN VÀ MA TRẬN CÂU LỆNH GIỌNG NÓI
 % ==============================================================================
-\section{BẢNG ÁNH XẠ CỬ CHỈ TAY VÀ HÀNH VI ROBOT}
+\section{BẢNG ÁNH XẠ KHU VỰC KHO VẬN VÀ MA TRẬN CÂU LỆNH GIỌNG NÓI}
 
-\subsection{Bảng ánh xạ 06 cử chỉ tay và thông số điều khiển động học}
-Hệ thống nhận diện và xử lý đầy đủ \textbf{06 cử chỉ tay} (vượt yêu cầu tối thiểu 05 cử chỉ của đề bài), được tổng hợp chi tiết trong Bảng~\ref{tab:gesture_mapping}:
+\subsection{Danh mục 05 khu vực chức năng kho vận (\texttt{semantic\_regions.json})}
+Bản đồ nhà kho được phân chia tự động thành \textbf{05 khu vực chức năng} với các điểm đích (Goal Pose) có khoảng cách an toàn (Clearance) tối ưu (Bảng~\ref{tab:regions}):
 
 \begin{table}[H]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{L{2.5cm}L{2.6cm}L{3.5cm}R}
+\begin{tabularx}{\textwidth}{L{1.0cm}L{3.2cm}L{4.2cm}L{3.8cm}R}
 \toprule
-\textbf{\color{primary}Cử chỉ tay} & \textbf{\color{primary}Nhãn trên Topic} & \textbf{\color{primary}Phương pháp nhận diện AI (MediaPipe + Landmarks)} & \textbf{\color{primary}Hành vi của TurtleBot 4 \& Thông số \texttt{/cmd\_vel}} \\
+\textbf{\color{primary}Mã} & \textbf{\color{primary}Tên khu vực} & \textbf{\color{primary}Từ khóa nhận diện (Aliases)} & \textbf{\color{primary}Tọa độ ROS $(x, y, \text{yaw})$} & \textbf{\color{primary}Clearance} \\
 \midrule
-\textbf{1. Vẫy tay}\newline(\textit{Wave}) & \texttt{Wave} & Phát hiện bàn tay mở ($\ge 3$ ngón duỗi) có dao động lắc ngang cổ tay ($\Delta x \ge 0.055$, quãng đường ngang $\ge 0.115$ trong $0.85\text{ s}$) hoặc cử chỉ \texttt{ILoveYou}. & \textbf{Chọn hành vi: Robot xoay trái--phải để chào lại.} Khi xác nhận: thực hiện 4 pha xoay đối xứng ($\omega = \pm 0.85\text{ rad/s}$) giúp robot lắc chào 2 chu kỳ và trở về đúng góc ban đầu. \\
+\textbf{A} & Khu nhập hàng (\textit{Inbound}) & \texttt{khu vuc a}, \texttt{khu nhap hang}, \texttt{nhap hang} & $(1.80\text{ m}, 13.00\text{ m}, 1.57\text{ rad})$ & $2.55\text{ m}$ \\
 \rowcolor{boxbg}
-\textbf{2. Giơ 1 ngón tay}\newline(\textit{Pointing Up}) & \texttt{Pointing\_Up} & Mô hình MediaPipe phân loại \texttt{Pointing\_Up} (kết hợp kiểm tra hình học chỉ duy nhất ngón trỏ số 8 duỗi thẳng). & \textbf{Chọn hành vi: Tiến--lùi 4 lần.} Khi xác nhận: lặp 4 chu kỳ liên tiếp, mỗi chu kỳ tiến thẳng ($v = +0.20\text{ m/s}$ trong $1.8\text{ s}$), nghỉ $0.35\text{ s}$, lùi về ($v = -0.20\text{ m/s}$ trong $1.8\text{ s}$), nghỉ $0.35\text{ s}$. \\
-\textbf{3. Giơ 2 ngón tay}\newline(\textit{Victory}) & \texttt{Victory} & Mô hình MediaPipe phân loại \texttt{Victory} (2 ngón trỏ và giữa duỗi chữ V, áp út và út gập). & \textbf{Chọn hành vi: Di chuyển theo quỹ đạo tròn.} Khi xác nhận: phát đồng thời $v = 0.18\text{ m/s}$ và $\omega = 0.45\text{ rad/s}$ tạo quỹ đạo tròn bán kính $R = \frac{v}{\omega} = 0.40\text{ m}$ khép kín $360^\circ$ ($T \approx 14.0\text{ s}$). \\
+\textbf{B} & Khu phân loại (\textit{Sorting}) & \texttt{khu vuc b}, \texttt{khu phan loai}, \texttt{phan loai} & $(2.80\text{ m}, 5.30\text{ m}, -1.57\text{ rad})$ & $2.60\text{ m}$ \\
+\textbf{C} & Khu xuất hàng (\textit{Outbound}) & \texttt{khu vuc c}, \texttt{khu xuat hang}, \texttt{xuat hang} & $(3.20\text{ m}, 1.20\text{ m}, 0.00\text{ rad})$ & $2.15\text{ m}$ \\
 \rowcolor{boxbg}
-\textbf{4. Giơ ngón cái}\newline(\textit{Thumbs Up}) & \texttt{Thumbs\_Up} & Mô hình MediaPipe phân loại \texttt{Thumb\_Up} với độ tin cậy $\ge 58\%$. & \textbf{Xác nhận và thực hiện hành vi đã chọn:} Chuyển FSM từ \texttt{SELECTED} sang \texttt{EXECUTING} để bắt đầu chạy hành vi đã chọn. \\
-\textbf{5. Xòe bàn tay}\newline(\textit{Open Palm}) & \texttt{Open\_Palm} & Mô hình MediaPipe phân loại \texttt{Open\_Palm} khi bàn tay mở giữ tĩnh (không lắc ngang). & \textbf{Robot dừng ngay lập tức (\textit{Emergency Stop}):} Lập tức phát $v = 0.0, \omega = 0.0$ lên \texttt{/cmd\_vel}, ngắt chuyển động và chuyển sang \texttt{STOPPED}. \\
-\rowcolor{boxbg}
-\textbf{6. Nắm tay}\newline(\textit{Closed Fist}) & \texttt{Closed\_Fist} & Mô hình MediaPipe phân loại \texttt{Closed\_Fist} (cả 5 ngón tay nắm kín). & \textbf{Hủy hành vi hiện tại và trở về trạng thái chờ:} Xóa hành vi đang chạy hoặc đang chọn, dừng robot ($v = 0, \omega = 0$) và đưa FSM về \texttt{IDLE}. \\
+\textbf{D} & Khu kệ hàng (\textit{Storage}) & \texttt{khu vuc d}, \texttt{khu ke hang}, \texttt{ke hang} & $(2.00\text{ m}, -8.50\text{ m}, -1.57\text{ rad})$ & $2.85\text{ m}$ \\
+\textbf{E} & Trạm sạc (\textit{Dock Station}) & \texttt{khu vuc e}, \texttt{tram sac}, \texttt{ve sac}, \texttt{dock sac} & $(-1.60\text{ m}, 0.00\text{ m}, 3.14\text{ rad})$ & $1.70\text{ m}$ \\
 \bottomrule
 \end{tabularx}
-\caption{Bảng ánh xạ chi tiết 06 cử chỉ tay sang hành vi điều khiển TurtleBot 4}
-\label{tab:gesture_mapping}
+\caption{Thông số chi tiết 05 khu vực chức năng kho vận xác định qua xử lý ảnh OpenCV}
+\label{tab:regions}
 \end{table}
 
-\subsection{Cơ chế chống nhiễu, dừng khẩn cấp và đảm bảo an toàn}
-\begin{enumerate}
-  \item \textbf{Chống nhiễu hai tầng (\textit{Two-stage Anti-Noise \& Edge-Trigger Cooldown}):}
-  \begin{itemize}
-    \item Tại \texttt{gesture\_recognition\_node}: Bộ đệm trượt \texttt{gesture\_history} lọc đa số qua \texttt{debounce\_frames = 4} khung hình liên tiếp kết hợp ngưỡng độ tin cậy \texttt{min\_confidence = 0.58}, loại bỏ hoàn toàn hiện tượng nhấp nháy nhãn khi người dùng đang chuyển đổi tư thế ngón tay.
-    \item Tại \texttt{robot\_behavior\_node}: Áp dụng cơ chế \textit{Edge-Trigger} kết hợp thời gian khóa lặp \texttt{command\_cooldown = 1.2s} và \texttt{min\_confirm\_frames = 2}, đảm bảo việc giữ nguyên tay trước webcam không gây kích hoạt lệnh lặp đi lặp lại.
-  \end{itemize}
-  \item \textbf{Tự động dừng khi mất tín hiệu điều khiển (\textit{Watchdog Timer}):}
-  Trong vòng lặp điều khiển $20\text{ Hz}$, nếu robot đang ở trạng thái \texttt{EXECUTING} mà thời gian kể từ bản tin \texttt{/detected\_gesture} cuối cùng vượt quá \texttt{signal\_timeout = 1.8s} (ví dụ node webcam bị đóng hoặc mất kết nối camera), hệ thống lập tức phanh robot ($v=0, \omega=0$) và chuyển sang trạng thái \texttt{STOPPED}.
-  \item \textbf{Di chuyển trong khu vực rộng thoáng và chống va chạm bằng LiDAR:}
-  Khi khởi chạy, node \texttt{auto\_undock} tự động đưa robot lùi khỏi dock và tiến thêm $0.90\text{ m}$ ra chính giữa khoảng trống rộng của nhà kho \texttt{warehouse}. Ngoài ra, \texttt{robot\_behavior\_node} liên tục kiểm tra tia quét \texttt{/scan} ở góc $\pm 30^\circ$ phía trước (khi tiến) và phía sau (khi lùi), tự động dừng nếu phát hiện vật cản ở cự ly $< 0.25\text{ m}$.
-\end{enumerate}
+\subsection{Ma trận phân tích câu lệnh giọng nói và điều hướng chuỗi liên hoàn}
+Hệ thống hỗ trợ đa dạng cấu trúc ngữ pháp câu lệnh tiếng Việt, từ lệnh đơn điểm đến chuỗi phức tạp liên hoàn qua 5 trạm và cơ chế từ chối an toàn khi phát hiện khu vực sai (Bảng~\ref{tab:commands}):
+
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{2.5cm}L{4.2cm}L{2.8cm}L{2.2cm}R}
+\toprule
+\textbf{\color{primary}Nhóm lệnh} & \textbf{\color{primary}Mẫu câu lệnh Microphone} & \textbf{\color{primary}Loại lệnh} & \textbf{\color{primary}Chuỗi trạm} & \textbf{\color{primary}Hành vi Nav2} \\
+\midrule
+\textbf{Lệnh đơn}\newline(\textit{Single Goal}) & \textit{``Đi đến khu vực A.''} & \texttt{SINGLE\_GOAL} & $[\text{A}]$ & Đến thẳng Khu nhập hàng $(1.80, 13.00)\text{ m}$. \\
+\rowcolor{boxbg}
+& \textit{``Đi đến khu phân loại.''} & \texttt{SINGLE\_GOAL} & $[\text{B}]$ & Ánh xạ từ khóa chức năng tới Khu B $(2.80, 5.30)\text{ m}$. \\
+& \textit{``Quay về trạm sạc.''} & \texttt{SINGLE\_GOAL} & $[\text{E}]$ & Trở về Dock sạc trung tâm $(-1.60, 0.00)\text{ m}$. \\
+\midrule
+\textbf{Lệnh đa điểm}\newline(2--3 chặng) & \textit{``Di chuyển từ khu vực A đến khu vực B.''} & \texttt{MULTI\_WAYPOINT} & $[\text{A} \to \text{B}]$ & Qua A trước khi tới B (nếu chưa ở A). \\
+\rowcolor{boxbg}
+& \textit{``Đi từ phòng A qua hành lang C rồi đến phòng B.''} & \texttt{MULTI\_WAYPOINT} & $[\text{A} \to \text{C} \to \text{B}]$ & Tuần tự 3 chặng: Nhập (A) $\to$ Xuất (C) $\to$ Phân loại (B). \\
+\midrule
+\textbf{Chuỗi liên hoàn}\newline(\textit{Full 5 Stops}) & \textbf{\textit{``qua A qua B qua C qua D rồi qua E''}} & \texttt{MULTI\_WAYPOINT} & $[\text{A} \to \text{B} \to \text{C} \to \text{D} \to \text{E}]$ & \textbf{Tuần tự qua toàn bộ 5 khu vực kho: Nhập $\to$ Phân loại $\to$ Xuất $\to$ Kệ $\to$ Sạc.} \\
+\rowcolor{boxbg}
+& \textit{``Đi qua A, B, C, D rồi đến E''} & \texttt{MULTI\_WAYPOINT} & $[\text{A} \to \text{B} \to \text{C} \to \text{D} \to \text{E}]$ & Tách chuỗi dấu phẩy thành 5 chặng liên tiếp. \\
+& \textit{``Đi từ A qua B, C, D rồi về E''} \newline(\textit{khi đã ở tại A}) & \texttt{MULTI\_WAYPOINT} & $[\text{B} \to \text{C} \to \text{D} \to \text{E}]$ & Tự động bỏ qua trạm A đã ở sẵn, đi tiếp 4 chặng: B $\to$ C $\to$ D $\to$ E. \\
+\rowcolor{boxbg}
+& \textit{``Đi qua A rồi qua B sau đó qua C tiếp tục qua D và cuối cùng đến E''} & \texttt{MULTI\_WAYPOINT} & $[\text{A} \to \text{B} \to \text{C} \to \text{D} \to \text{E}]$ & Bóc tách chính xác các từ chuyển tiếp: \textit{rồi, sau đó, tiếp tục, cuối cùng}. \\
+\midrule
+\textbf{An toàn khu vực sai} & \textit{``Đi đến khu vực Z.''} & \texttt{INVALID\_REGION} & $\varnothing$ & Phát hiện vùng Z lạ, từ chối lệnh và dừng an toàn. \\
+\rowcolor{boxbg}
+& \textbf{\textit{``qua A qua B qua C qua Z rồi qua E''}} & \texttt{INVALID\_REGION} & $\varnothing$ & \textbf{Phát hiện vùng Z sai nằm giữa chuỗi 5 trạm, hủy toàn bộ lộ trình ngay lập tức.} \\
+\bottomrule
+\end{tabularx}
+\caption{Ma trận phân tích câu lệnh giọng nói và cơ chế điều hướng chuỗi liên hoàn}
+\label{tab:commands}
+\end{table}
 
 \subsection{Trích đoạn mã nguồn cốt lõi}
-\begin{lstlisting}[language=Python, caption={Trích đoạn phát hiện cử chỉ Vẫy tay động (Wave) và phân loại 06 cử chỉ trong \texttt{gesture\_recognition\_node.py}}]
-def _detect_dynamic_wave(self, landmarks, now: float) -> tuple:
-    """Phat hien cu chi Vay tay (Wave) dua tren dao dong ngang cua ban tay mo."""
-    palm_x = 0.5 * (landmarks[0].x + landmarks[9].x)
-    self.hand_x_history.append((now, palm_x))
-    while self.hand_x_history and (now - self.hand_x_history[0][0]) > self.wave_window_sec:
-        self.hand_x_history.popleft()
-    if len(self.hand_x_history) < 6:
-        return False, 0.0
-
-    xs = [pt[1] for pt in self.hand_x_history]
-    span_x = max(xs) - min(xs)
-    path_x = sum(abs(xs[i] - xs[i - 1]) for i in range(1, len(xs)))
-    if span_x >= self.wave_min_span_x and path_x >= self.wave_min_path_x:
-        self.last_wave_detected_time = now
-        conf = min(0.99, 0.82 + (span_x - self.wave_min_span_x) * 1.5)
-        return True, conf
-    return False, 0.0
+\begin{lstlisting}[language=Python, caption={Thuật toán tách chặng chuỗi liên hoàn nhiều điểm dừng trong \texttt{voice\_navigation\_node.py}}]
+def _extract_region_sequence_from_segment(self, segment: str, valid_keys: list) -> list:
+    """Tach danh sach cac khu vuc trong mot doan cau (ho tro dau phay va tu noi)."""
+    sub_parts = re.split(r'[,|va|roi|sau do|tiep tuc|cuoi cung]', segment)
+    found_regions = []
+    for sp in sub_parts:
+        norm_sp = self.normalize_phrase(sp)
+        matched = self._match_single_region_exact(norm_sp, valid_keys)
+        if matched:
+            found_regions.append(matched)
+    return found_regions
 \end{lstlisting}
 
-\begin{lstlisting}[language=Python, caption={Trích đoạn xử lý xác nhận \texttt{Thumbs\_Up} và tính toán vận tốc trong \texttt{robot\_behavior\_node.py}}]
-def _handle_confirm_behavior(self, now: float):
-    """Chi thuc thi hanh vi sau khi nhan duoc cu chi xac nhan Thumbs_Up."""
-    if self.state == self.STATE_EXECUTING or self.selected_behavior is None:
-        return
-    self.active_behavior = self.selected_behavior
-    self.state = self.STATE_EXECUTING
-    self.exec_start_time = now
-    self.get_logger().info(f'[XAC NHAN THANH CONG - Thumbs_Up] Bat dau: {self.active_behavior}')
+\begin{lstlisting}[language=Python, caption={Thuật toán tối ưu hóa điểm xuất phát dựa trên cự ly AMCL trong \texttt{voice\_navigation\_node.py}}]
+def plan_waypoints_for_command(self, parsed_cmd: dict, current_xy: tuple) -> tuple:
+    """Lap lo trinh toi uu: bo qua tram xuat phat neu robot da o san trong vung."""
+    waypoints = list(parsed_cmd.get('targets', []))
+    start_region = parsed_cmd.get('start_region')
+    if start_region:
+        start_pose = self.regions[start_region]['goal_pose']
+        dist_to_start = math.hypot(current_xy[0] - start_pose['x'], current_xy[1] - start_pose['y'])
+        if dist_to_start > self.start_region_threshold:  # 1.25m
+            waypoints.insert(0, start_region)
+        else:
+            self.get_logger().info(f'Robot da o san trong vung {start_region} (d={dist_to_start:.2f}m) -> Bo qua!')
+    return waypoints
 \end{lstlisting}
 
 % ==============================================================================
@@ -476,64 +411,86 @@ def _handle_confirm_behavior(self, now: float):
 \newpage
 \section{KẾT QUẢ THỰC NGHIỆM \& HÌNH ẢNH MINH HỌA}
 
-\subsection{Hình ảnh minh họa kết quả thực nghiệm toàn hệ thống}
-Hình~\ref{fig:demo_gesture} ghi lại toàn cảnh hệ thống đang vận hành thực tế đồng thời trên cả 04 cửa sổ mà hoàn toàn không sử dụng bàn phím:
-\begin{enumerate}
-  \item \textbf{Góc dưới bên phải (Cửa sổ Webcam AI -- MediaPipe Gesture Recognizer):} Hiển thị khung xương 21 điểm khớp bàn tay của người điều khiển với kết quả nhận diện \texttt{Gesture: Wave | Confidence: 99.0\%}, thanh khóa chống nhiễu \texttt{Anti-Noise Lock} đạt 100\% và dòng trạng thái đồng bộ trực tiếp từ robot: \texttt{Robot: SELECTED [Wave]: Xoay trai-phai chao lai -> Gio Thumbs\_Up de XAC NHAN!}.
-  \item \textbf{Góc dưới bên trái (Môi trường mô phỏng Gazebo Fortress):} Robot TurtleBot 4 Standard đã tự động rời trạm sạc (Undock) và tiến ra khu vực sàn rộng rãi có vạch kẻ an toàn, không vướng bất kỳ vật cản nào khi thực hiện xoay chào, tiến--lùi 4 lần và đi quỹ đạo tròn.
-  \item \textbf{Góc trên bên phải (Giao diện RViz2 tích hợp bản đồ \texttt{map.yaml}):} Hiển thị bản đồ 2D đã lưu từ các tuần trước, mô hình 3D \texttt{RobotModel}, tia quét LiDAR \texttt{/scan} khớp với tường bản đồ và đám mây hạt định vị \texttt{Amcl Particle Swarm} màu xanh lá hội tụ quanh robot.
-  \item \textbf{Góc trên bên trái (Terminal Log thời gian thực):} Ghi lại nhật ký hoạt động của \texttt{gesture\_recognition\_node} và \texttt{robot\_behavior\_node} khi hoàn thành hành vi \texttt{Wave} (4/4 pha xoay chào trái--phải), kích hoạt dừng khẩn cấp \texttt{Open\_Palm} và chọn lại hành vi mới.
-\end{enumerate}
+\subsection{Hình ảnh minh họa kết quả phân vùng và điều hướng giọng nói}
+Hình~\ref{fig:pipeline_full} minh họa quy trình 4 bước xử lý ảnh bản đồ kho vận 2D bằng OpenCV; và Hình~\ref{fig:studio_full} ghi lại kết quả nhận diện giọng nói câu lệnh liên hoàn 5 chặng qua Microphone tại giao diện Voice Navigation Studio:
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\textwidth]{figures/demo_gesture_control.png}
-\caption{Kết quả thực nghiệm tích hợp: Terminal Log (trái trên), Gazebo Simulation với TurtleBot 4 ở khu vực rộng thoáng (trái dưới), RViz2 hiển thị bản đồ đã lưu \& AMCL (phải trên), và cửa sổ Webcam nhận diện cử chỉ tay MediaPipe đạt độ tin cậy $99.0\%$ (phải dưới)}
-\label{fig:demo_gesture}
+\includegraphics[width=0.92\textwidth]{figures/map_segmentation_pipeline.png}
+\caption{Quy trình 4 bước phân vùng bản đồ kho vận bằng OpenCV: (1) Bản đồ gốc Occupancy Grid; (2) Phân ngưỡng nhị phân \& Lọc hình thái học; (3) Trường khoảng cách Euclid Distance Transform L2; (4) Phân vùng Watershed có hạt giống và gắn nhãn 5 phân khu chức năng}
+\label{fig:pipeline_full}
 \end{figure}
 
-\subsection{Log Terminal thực nghiệm từ quá trình vận hành}
-\begin{lstlisting}[backgroundcolor=\color{logbg}, caption={Trích xuất Log Terminal thực tế khi nhận diện cử chỉ và điều khiển hành vi TurtleBot 4}]
-[robot_behavior_node] [INFO]: [DANG CHAY] Wave (3/4): Xoay sang TRAI chao | v=+0.00 m/s, w=+0.85 rad/s
-[robot_behavior_node] [INFO]: [DANG CHAY] Wave (4/4): Quay ve huong ban dau | v=+0.00 m/s, w=-0.85 rad/s
-[robot_behavior_node] [INFO]: [HOAN THANH HANH VI] IDLE: Da hoan thanh [Wave] (Hoan thanh xoay trai-phai chao lai!). San sang nhan cu chi moi!
-[gesture_recognition_node] [INFO]: [PHAT HIEN CU CHI] Open_Palm    | Do tin cay:  67.4% | Xoe ban tay -> DUNG KHAN CAP ngay lap tuc
-[robot_behavior_node] [WARN]: [DUNG KHAN CAP - Open_Palm] STOPPED (Open_Palm): Robot da DUNG NGAY LAP TUC! (Truoc do: IDLE / None)
-[gesture_recognition_node] [INFO]: [PHAT HIEN CU CHI] Wave         | Do tin cay:  92.4% | Vay tay -> Chon: Xoay trai-phai chao lai
-[robot_behavior_node] [INFO]: [DA CHON HANH VI] Wave (Xoay trai-phai chao lai (Wave Greeting)) | Robot dang cho cu chi Gio ngon cai (Thumbs_Up) de xac nhan thuc thi.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{figures/speech_recognition_demo.png}
+\caption{Giao diện Voice Navigation Studio khi thu âm trực tiếp từ Microphone câu lệnh chuỗi liên hoàn phức tạp: hiển thị dạng sóng âm thời gian thực, bóc tách lộ trình 5 chặng liên tiếp $A \to B \to C \to D \to E$ đánh số thứ tự (1) $\to$ (2) $\to$ (3) $\to$ (4) $\to$ (5) và vẽ đường đi dự kiến kết nối toàn kho}
+\label{fig:studio_full}
+\end{figure}
+
+\subsection{Kết quả kiểm thử tự động 22 kịch bản NLP toàn diện}
+\begin{lstlisting}[backgroundcolor=\color{logbg}, caption={Trích xuất nhật ký kiểm thử tự động 22 kịch bản NLP trong \texttt{voice\_navigation\_node.py}}]
+========================================================================
+   KIEM THU BO PHAN TICH CAU LENH GIONG NOI NHA KHO (WAREHOUSE NLP)     
+========================================================================
+ [14] Cau lenh : "qua A qua B qua C qua D roi qua E" (Robot tai (0.35, 0.0))
+      Trang thai: HOP LE | Lo trinh Waypoints: ['A', 'B', 'C', 'D', 'E']
+      Chi tiet  : Lo trinh da diem (5 chang): Chang 1: [A] Khu nhap hang (1.80, 13.00)m -> Chang 2: [B] Khu phan loai (2.80, 5.30)m -> Chang 3: [C] Khu xuat hang (3.20, 1.20)m -> Chang 4: [D] Khu ke hang (2.00, -8.50)m -> Chang 5: [E] Tram sac (-1.60, 0.00)m
+
+ [15] Cau lenh : "Di qua A, B, C, D roi den E" (Robot tai (0.35, 0.0))
+      Trang thai: HOP LE | Lo trinh Waypoints: ['A', 'B', 'C', 'D', 'E']
+
+ [16] Cau lenh : "Di tu A qua B, C, D roi ve E" (Robot tai (0.35, 0.0))
+      Trang thai: HOP LE | Lo trinh Waypoints: ['A', 'B', 'C', 'D', 'E']
+
+ [17] Cau lenh : "Di tu A qua B, C, D roi ve E" (Robot tai (1.8, 13.0) - da o A)
+      Trang thai: HOP LE | Lo trinh Waypoints: ['B', 'C', 'D', 'E']
+      Chi tiet  : Tu dong bo qua tram A, bat dau ngay tu tram B!
+
+ [22] Cau lenh : "qua A qua B qua C qua Z roi qua E" (Robot tai (0.35, 0.0))
+      Trang thai: TU CHOI (KHU VUC KHONG TON TAI TRONG NHA KHO) | Lo trinh: []
+      Chi tiet  : Khu vuc 'Z' khong ton tai! Tu choi toan bo lo trinh, dung an toan!
+
+========================================================================
+[SELF-TEST PASSED] Tat ca 22 kich ban cau lenh giong noi nha kho chinh xac 100%!
+========================================================================
 \end{lstlisting}
 
 % ==============================================================================
-% MỤC 5: HƯỚNG DẪN CHẠY CHƯƠNG TRÌNH & LINK NỘP BÀI
+% MỤC 5: HƯỚNG DẪN THỰC THI & ĐƯỜNG DẪN NỘP BÀI
 % ==============================================================================
 \section{HƯỚNG DẪN THỰC THI \& ĐƯỜNG DẪN NỘP BÀI}
 
 \subsection{Hướng dẫn biên dịch và khởi chạy chương trình}
 \begin{lstlisting}[language=bash, caption={Các lệnh biên dịch và khởi chạy hệ thống}]
-# 1. Build workspace
+# 1. Cap nhat ma nguon tu GitHub chinh thuc va cai dat thu vien
+cd /home/tuan/turtelbot4_ws/src/turtlebot4_practice4
+git remote set-url origin https://github.com/Tuan404cl/Turtlebot_sim_test4.git
+pip install opencv-python speechrecognition faster-whisper pyaudio sounddevice
+sudo apt-get update && sudo apt-get install -y alsa-utils pulseaudio-utils
+
+# 2. Bien dich goi turtlebot4_practice4
 cd /home/tuan/turtelbot4_ws
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --packages-select turtlebot4_practice4
 source install/setup.bash
 
-# 2. Chay tich hop toan bo (Gazebo + Map/AMCL tren RViz2 + Auto Undock + 2 Nodes AI):
-./src/turtlebot4_practice4/scripts/run_gesture_all.sh
+# 3. Khoi chay toan bo he thong tich hop (01 lenh duy nhat):
+./src/turtlebot4_practice4/scripts/run_voice_navigation_all.sh
 
-# 3. Hoac chay rieng tung phan:
-# Phan 1 - Kiem tra /cmd_vel va hien thi Webcam bang OpenCV:
-./src/turtlebot4_practice4/scripts/run_gesture_part1_sim_webcam.sh
-
-# Phan 2 - Khoi chay Node nhan dien cu chi tay AI (gesture_recognition_node):
-./src/turtlebot4_practice4/scripts/run_gesture_part2_recognition.sh
-
-# Phan 3 - Khoi chay Node dieu khien hanh vi TurtleBot 4 (robot_behavior_node):
-./src/turtlebot4_practice4/scripts/run_gesture_part3_behavior.sh
+# 4. Chay kiem thu rieng tung phan:
+# Phan 1 - Map Segmentation:
+./src/turtlebot4_practice4/scripts/run_voice_part1_segment_map.sh
+# Phan 2 - Kiem tra Microphone truc tiep:
+./src/turtlebot4_practice4/scripts/run_voice_part2_speech_test.sh
+# Phan 3 - Kiem thu 22 kich ban NLP tu dong:
+python3 /home/tuan/turtelbot4_ws/src/turtlebot4_practice4/turtlebot4_practice4/voice\_navigation\_node.py --self-test
 \end{lstlisting}
 
 \subsection{Liên kết Video Demo và GitHub Repository}
 \begin{itemize}
   \item \textbf{GitHub Repository (Public):}\\
-  \url{https://github.com/Tuan404cl/Turtlebot_sim_test3.git}
+  \url{https://github.com/Tuan404cl/Turtlebot_sim_test4}
   \item \textbf{Video Demo trên Google Drive (Chế độ công khai):}\\
   \url{https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=drive_link}
 \end{itemize}

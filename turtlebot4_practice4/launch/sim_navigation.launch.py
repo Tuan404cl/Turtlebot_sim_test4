@@ -107,7 +107,7 @@ def generate_launch_description():
         actions=[tf_relay_node]
     )
 
-    # 3. Localization (AMCL + Map Server) - khởi chạy sớm ở giây thứ 6 khi robot ở trên dock (0, 0, 0)
+    # 3. Localization (AMCL + Map Server) - khởi chạy ở giây thứ 10 khi robot đã spawn xong trên dock (0, 0, 0)
     localization = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([tb4_loc_launch]),
         launch_arguments=[
@@ -118,11 +118,11 @@ def generate_launch_description():
         ]
     )
     delayed_localization = TimerAction(
-        period=6.0,
+        period=10.0,
         actions=[localization]
     )
 
-    # 4. RViz2 Navigation View - mở đồng thời cùng localization ở giây thứ 6 (hiển thị robot trên dock)
+    # 4. RViz2 Navigation View - mở đồng thời cùng localization ở giây thứ 10 (hiển thị robot trên dock)
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -133,7 +133,7 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz'))
     )
     delayed_rviz = TimerAction(
-        period=6.0,
+        period=10.0,
         actions=[rviz_node]
     )
 

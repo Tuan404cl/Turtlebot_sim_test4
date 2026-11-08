@@ -10,7 +10,11 @@ Dự án thực hành hoàn chỉnh cho robot **TurtleBot 4 Standard** trong mô
 * **Mã số sinh viên (MSSV):** 23020767
 * **Giảng viên hướng dẫn:** PGS.TS. Hoàng Văn Xiêm, CN. Nguyễn Quốc Bảo
 * **Video Demo (Google Drive - Chế độ công khai):** [Xem Video Demo trên Google Drive](https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=drive_link)
-* **GitHub Repository (Public):** `https://github.com/Tuan404cl/Turtlebot_sim_test3.git`
+* **GitHub Repository (Public):** `https://github.com/Tuan404cl/Turtlebot_sim_test4`
+* **File báo cáo kỹ thuật Bài tập 7 (Phân vùng Bản đồ & Điều hướng Giọng nói - Markdown chuẩn):** [turtlebot4_practice4/docs/bao_cao_bai_tap_07.md](turtlebot4_practice4/docs/bao_cao_bai_tap_07.md)
+* **File báo cáo kỹ thuật (Bài tập Phân vùng Bản đồ & Điều hướng Giọng nói - PDF 2 trang):** [turtlebot4_practice4/docs/bao_cao_voice_navigation.pdf](turtlebot4_practice4/docs/bao_cao_voice_navigation.pdf)
+* **File báo cáo kỹ thuật (Bài tập Phân vùng Bản đồ & Điều hướng Giọng nói - Markdown):** [turtlebot4_practice4/docs/bao_cao_voice_navigation.md](turtlebot4_practice4/docs/bao_cao_voice_navigation.md)
+* **File báo cáo kỹ thuật Bài tập 6 (Điều khiển cử chỉ tay - Markdown):** [turtlebot4_practice4/docs/bao_cao_bai_tap_06.md](turtlebot4_practice4/docs/bao_cao_bai_tap_06.md)
 * **Báo cáo kỹ thuật chi tiết (Markdown):** [turtlebot4_practice4/docs/bao_cao_thuc_hanh_04.md](turtlebot4_practice4/docs/bao_cao_thuc_hanh_04.md)
 * **Báo cáo kỹ thuật (HTML):** [turtlebot4_practice4/docs/bao_cao_thuc_hanh_04.html](turtlebot4_practice4/docs/bao_cao_thuc_hanh_04.html)
 * **Báo cáo kỹ thuật (PDF):** [turtlebot4_practice4/docs/bao_cao_thuc_hanh_04.pdf](turtlebot4_practice4/docs/bao_cao_thuc_hanh_04.pdf)
@@ -66,11 +70,45 @@ source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 source install/setup.bash
 
-# 2. Chạy tích hợp Bài tập Điều khiển Hành vi TurtleBot 4 bằng Cử chỉ tay AI (MediaPipe + OpenCV):
+# 2. Chạy tích hợp Bài tập Phân vùng Bản đồ & Điều hướng Bằng Giọng nói với Nav2:
+./src/turtlebot4_practice4/scripts/run_voice_navigation_all.sh
+
+# 3. Chạy tích hợp Bài tập Điều khiển Hành vi TurtleBot 4 bằng Cử chỉ tay AI (MediaPipe + OpenCV):
 ./src/turtlebot4_practice4/scripts/run_gesture_all.sh
 
-# 3. Hoặc chạy tích hợp Bài tập AMCL Localization + Auto Nav2 + YOLOv8:
+# 4. Hoặc chạy tích hợp Bài tập AMCL Localization + Auto Nav2 + YOLOv8:
 ./src/turtlebot4_practice4/scripts/run_part4_navigation.sh
+```
+
+---
+
+## 🎙️ Bài Tập Phân Vùng Bản Đồ Nhà Kho (Warehouse Map Segmentation) & Điều Khiển Điều Hướng Bằng Giọng Nói Trực Tiếp Qua Microphone Với Nav2
+
+* **Báo cáo kỹ thuật ngắn 2 trang (PDF):** [`turtlebot4_practice4/docs/bao_cao_voice_navigation.pdf`](turtlebot4_practice4/docs/bao_cao_voice_navigation.pdf)
+* **Báo cáo kỹ thuật (Markdown):** [`turtlebot4_practice4/docs/bao_cao_voice_navigation.md`](turtlebot4_practice4/docs/bao_cao_voice_navigation.md)
+* **Bản đồ gốc:** [`turtlebot4_practice4/maps/map.pgm`](turtlebot4_practice4/maps/map.pgm) & [`turtlebot4_practice4/maps/map.yaml`](turtlebot4_practice4/maps/map.yaml)
+* **Bản đồ phân vùng trực quan:** [`turtlebot4_practice4/maps/map_segmented.png`](turtlebot4_practice4/maps/map_segmented.png) & [`turtlebot4_practice4/maps/map_segmented.pgm`](turtlebot4_practice4/maps/map_segmented.pgm)
+* **Dữ liệu các khu vực ngữ nghĩa nhà kho:** [`turtlebot4_practice4/config/semantic_regions.json`](turtlebot4_practice4/config/semantic_regions.json) & [`turtlebot4_practice4/config/semantic_regions.yaml`](turtlebot4_practice4/config/semantic_regions.yaml)
+
+### 1. Bảng 05 Khu Vực Chức Năng Trong Nhà Kho (`warehouse.sdf`)
+| Mã khu vực | Tên khu vực nhà kho | Tọa độ Pixel $(u, v)$ | Tọa độ ROS `map` $(x, y, \text{yaw})$ | Các câu lệnh giọng nói qua Microphone tiêu biểu |
+| :---: | :--- | :---: | :---: | :--- |
+| **`A`** | **Khu nhập hàng** | `(338, 240)` | `(1.80, 13.00, 0.00)` | *"Đi đến khu vực A."*, *"Đi đến khu nhập hàng."* |
+| **`B`** | **Khu phân loại** | `(358, 394)` | `(2.80, 5.30, 1.57)` | *"Đi đến khu vực B."*, *"Đi đến khu phân loại."* |
+| **`C`** | **Khu xuất hàng** | `(366, 476)` | `(3.20, 1.20, 0.00)` | *"Đi đến khu vực C."*, *"Đi đến khu xuất hàng."* |
+| **`D`** | **Khu kệ hàng** | `(342, 670)` | `(2.00, -8.50, -1.57)` | *"Đi đến khu vực D."*, *"Đi đến khu kệ hàng."* |
+| **`E`** | **Trạm sạc** | `(270, 500)` | `(-1.60, 0.00, 3.14)` | *"Đi đến khu vực E."*, *"Quay về trạm sạc."* |
+
+### 2. Hướng Dẫn Chạy Từng Phần Hoặc Tích Hợp
+```bash
+# 1. Phân vùng bản đồ nhà kho .pgm bằng OpenCV (Threshold + Morphology + Distance Transform + Watershed):
+./src/turtlebot4_practice4/scripts/run_voice_part1_segment_map.sh
+
+# 2. Kiểm thử phần cứng Microphone trực tiếp & Bộ phân tích câu lệnh nhà kho NLP:
+./src/turtlebot4_practice4/scripts/run_voice_part2_speech_test.sh
+
+# 3. Chạy tích hợp toàn bộ (Gazebo + AMCL + Nav2 + RViz2 Semantic Markers + Live Microphone Voice Studio):
+./src/turtlebot4_practice4/scripts/run_voice_navigation_all.sh
 ```
 
 ---

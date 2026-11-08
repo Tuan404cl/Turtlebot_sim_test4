@@ -1,0 +1,420 @@
+{
+  "map_metadata": {
+    "map_yaml": "map.yaml",
+    "image": "map.pgm",
+    "segmented_image_png": "map_segmented.png",
+    "segmented_image_pgm": "map_segmented.pgm",
+    "resolution": 0.05,
+    "origin": [
+      -15.1,
+      -25.1,
+      0.0
+    ],
+    "width": 603,
+    "height": 1003,
+    "segmentation_method": "OpenCV Binary Thresholding + Morphological Filtering + Distance Transform + Marker-Controlled Watershed (5 Warehouse Functional Zones)"
+  },
+  "regions": [
+    {
+      "id": "A",
+      "name": "Khu nhập hàng",
+      "name_ascii": "Khu nhap hang",
+      "full_label": "Khu vực A - Khu nhập hàng",
+      "description": "Khoang tiếp nhận và tập kết hàng hóa nhập kho phía Bắc (phía trên kệ ngang)",
+      "aliases": [
+        "khu vực a",
+        "khu vuc a",
+        "vùng a",
+        "vung a",
+        "điểm a",
+        "diem a",
+        "a",
+        "phòng a",
+        "phong a",
+        "khu a",
+        "khu nhập hàng",
+        "khu nhap hang",
+        "kho nhập hàng",
+        "kho nhap hang",
+        "nhập hàng",
+        "nhap hang",
+        "kho phía bắc",
+        "kho phia bac",
+        "inbound",
+        "inbound bay",
+        "receiving zone",
+        "zone a",
+        "area a",
+        "region a"
+      ],
+      "pixel_goal": {
+        "u": 338,
+        "v": 240
+      },
+      "pixel_centroid": {
+        "u": 315,
+        "v": 234
+      },
+      "world_goal": {
+        "x": 1.8,
+        "y": 13.0,
+        "yaw": 0.0
+      },
+      "world_centroid": {
+        "x": 0.68,
+        "y": 13.32
+      },
+      "bounding_box_pixel": {
+        "u_min": 102,
+        "v_min": 164,
+        "u_max": 545,
+        "v_max": 346
+      },
+      "bounding_box_world": {
+        "x_min": -9.97,
+        "y_min": 7.72,
+        "x_max": 12.18,
+        "y_max": 16.82
+      },
+      "area_pixels": 62027,
+      "area_m2": 155.07,
+      "clearance_m": 3.0,
+      "is_valid_free_space": true,
+      "color_bgr": [
+        190,
+        125,
+        35
+      ],
+      "color_rgb": [
+        35,
+        125,
+        190
+      ],
+      "color_hex": "#237DBE"
+    },
+    {
+      "id": "B",
+      "name": "Khu phân loại",
+      "name_ascii": "Khu phan loai",
+      "full_label": "Khu vực B - Khu phân loại",
+      "description": "Sảnh trung tâm kiểm đếm và phân loại hàng hóa phía dưới dãy kệ ngang",
+      "aliases": [
+        "khu vực b",
+        "khu vuc b",
+        "vùng b",
+        "vung b",
+        "điểm b",
+        "diem b",
+        "b",
+        "phòng b",
+        "phong b",
+        "khu b",
+        "khu phân loại",
+        "khu phan loai",
+        "khu phân loại hàng",
+        "khu phan loai hang",
+        "phân loại",
+        "phan loai",
+        "phân loại hàng",
+        "phan loai hang",
+        "khu kiểm hàng",
+        "khu kiem hang",
+        "sảnh trung tâm",
+        "sanh trung tam",
+        "sorting",
+        "sorting zone",
+        "zone b",
+        "area b",
+        "region b"
+      ],
+      "pixel_goal": {
+        "u": 358,
+        "v": 394
+      },
+      "pixel_centroid": {
+        "u": 312,
+        "v": 390
+      },
+      "world_goal": {
+        "x": 2.8,
+        "y": 5.3,
+        "yaw": 1.57
+      },
+      "world_centroid": {
+        "x": 0.53,
+        "y": 5.53
+      },
+      "bounding_box_pixel": {
+        "u_min": 102,
+        "v_min": 323,
+        "u_max": 550,
+        "v_max": 449
+      },
+      "bounding_box_world": {
+        "x_min": -9.97,
+        "y_min": 2.58,
+        "x_max": 12.43,
+        "y_max": 8.88
+      },
+      "area_pixels": 42342,
+      "area_m2": 105.86,
+      "clearance_m": 2.7,
+      "is_valid_free_space": true,
+      "color_bgr": [
+        75,
+        175,
+        75
+      ],
+      "color_rgb": [
+        75,
+        175,
+        75
+      ],
+      "color_hex": "#4BAF4B"
+    },
+    {
+      "id": "C",
+      "name": "Khu xuất hàng",
+      "name_ascii": "Khu xuat hang",
+      "full_label": "Khu vực C - Khu xuất hàng",
+      "description": "Khu vực đóng gói và điều phối xuất hàng phía Đông nhà kho",
+      "aliases": [
+        "khu vực c",
+        "khu vuc c",
+        "vùng c",
+        "vung c",
+        "điểm c",
+        "diem c",
+        "c",
+        "phòng c",
+        "phong c",
+        "khu c",
+        "hành lang c",
+        "hanh lang c",
+        "khu xuất hàng",
+        "khu xuat hang",
+        "kho xuất hàng",
+        "kho xuat hang",
+        "xuất hàng",
+        "xuat hang",
+        "khu đóng gói",
+        "khu dong goi",
+        "đóng gói",
+        "dong goi",
+        "khu giao hàng",
+        "khu giao hang",
+        "outbound",
+        "shipping zone",
+        "packing zone",
+        "zone c",
+        "area c",
+        "region c"
+      ],
+      "pixel_goal": {
+        "u": 366,
+        "v": 476
+      },
+      "pixel_centroid": {
+        "u": 430,
+        "v": 508
+      },
+      "world_goal": {
+        "x": 3.2,
+        "y": 1.2,
+        "yaw": 0.0
+      },
+      "world_centroid": {
+        "x": 6.42,
+        "y": -0.38
+      },
+      "bounding_box_pixel": {
+        "u_min": 261,
+        "v_min": 444,
+        "u_max": 550,
+        "v_max": 575
+      },
+      "bounding_box_world": {
+        "x_min": -2.02,
+        "y_min": -3.73,
+        "x_max": 12.43,
+        "y_max": 2.83
+      },
+      "area_pixels": 28728,
+      "area_m2": 71.82,
+      "clearance_m": 1.93,
+      "is_valid_free_space": true,
+      "color_bgr": [
+        40,
+        155,
+        240
+      ],
+      "color_rgb": [
+        240,
+        155,
+        40
+      ],
+      "color_hex": "#F09B28"
+    },
+    {
+      "id": "D",
+      "name": "Khu kệ hàng",
+      "name_ascii": "Khu ke hang",
+      "full_label": "Khu vực D - Khu kệ hàng",
+      "description": "Hệ thống hành lang và 3 dãy kệ hàng lưu trữ dọc phía Nam nhà kho",
+      "aliases": [
+        "khu vực d",
+        "khu vuc d",
+        "vùng d",
+        "vung d",
+        "điểm d",
+        "diem d",
+        "d",
+        "phòng d",
+        "phong d",
+        "khu d",
+        "hành lang d",
+        "hanh lang d",
+        "khu kệ hàng",
+        "khu ke hang",
+        "kệ hàng",
+        "ke hang",
+        "khu lưu trữ",
+        "khu luu tru",
+        "kho lưu trữ",
+        "kho luu tru",
+        "hành lang kệ hàng",
+        "hanh lang ke hang",
+        "hành lang",
+        "hanh lang",
+        "storage",
+        "storage racks",
+        "aisle",
+        "zone d",
+        "area d",
+        "region d"
+      ],
+      "pixel_goal": {
+        "u": 342,
+        "v": 670
+      },
+      "pixel_centroid": {
+        "u": 276,
+        "v": 755
+      },
+      "world_goal": {
+        "x": 2.0,
+        "y": -8.5,
+        "yaw": -1.57
+      },
+      "world_centroid": {
+        "x": -1.27,
+        "y": -12.72
+      },
+      "bounding_box_pixel": {
+        "u_min": 102,
+        "v_min": 567,
+        "u_max": 445,
+        "v_max": 940
+      },
+      "bounding_box_world": {
+        "x_min": -9.97,
+        "y_min": -21.98,
+        "x_max": 7.17,
+        "y_max": -3.33
+      },
+      "area_pixels": 81328,
+      "area_m2": 203.32,
+      "clearance_m": 2.9,
+      "is_valid_free_space": true,
+      "color_bgr": [
+        175,
+        165,
+        45
+      ],
+      "color_rgb": [
+        45,
+        165,
+        175
+      ],
+      "color_hex": "#2DA5AF"
+    },
+    {
+      "id": "E",
+      "name": "Trạm sạc",
+      "name_ascii": "Tram sac",
+      "full_label": "Khu vực E - Trạm sạc",
+      "description": "Trạm sạc xuất phát (Docking Station) và khu vực điều phối phía Tây",
+      "aliases": [
+        "khu vực e",
+        "khu vuc e",
+        "vùng e",
+        "vung e",
+        "điểm e",
+        "diem e",
+        "e",
+        "phòng e",
+        "phong e",
+        "khu e",
+        "trạm sạc",
+        "tram sac",
+        "khu trạm sạc",
+        "khu tram sac",
+        "khu điều phối",
+        "khu dieu phoi",
+        "trạm bảo trì",
+        "tram bao tri",
+        "vị trí xuất phát",
+        "vi tri xuat phat",
+        "dock",
+        "charging station",
+        "zone e",
+        "area e",
+        "region e"
+      ],
+      "pixel_goal": {
+        "u": 270,
+        "v": 500
+      },
+      "pixel_centroid": {
+        "u": 201,
+        "v": 506
+      },
+      "world_goal": {
+        "x": -1.6,
+        "y": 0.0,
+        "yaw": 3.14
+      },
+      "world_centroid": {
+        "x": -5.03,
+        "y": -0.28
+      },
+      "bounding_box_pixel": {
+        "u_min": 102,
+        "v_min": 433,
+        "u_max": 314,
+        "v_max": 575
+      },
+      "bounding_box_world": {
+        "x_min": -9.97,
+        "y_min": -3.73,
+        "x_max": 0.62,
+        "y_max": 3.38
+      },
+      "area_pixels": 24390,
+      "area_m2": 60.98,
+      "clearance_m": 1.7,
+      "is_valid_free_space": true,
+      "color_bgr": [
+        155,
+        85,
+        190
+      ],
+      "color_rgb": [
+        190,
+        85,
+        155
+      ],
+      "color_hex": "#BE559B"
+    }
+  ]
+}

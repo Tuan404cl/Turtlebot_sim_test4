@@ -4,6 +4,12 @@
         <transport_descriptor>
             <transport_id>CustomUdpTransport</transport_id>
             <type>UDPv4</type>
+            <sendBufferSize>212992</sendBufferSize>
+            <receiveBufferSize>212992</receiveBufferSize>
+            <non_blocking_send>false</non_blocking_send>
+            <interfaceWhiteList>
+                <address>127.0.0.1</address>
+            </interfaceWhiteList>
         </transport_descriptor>
     </transport_descriptors>
 
@@ -16,4 +22,3 @@
         </rtps>
     </participant>
 </profiles>
-

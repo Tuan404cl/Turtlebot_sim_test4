@@ -10,7 +10,11 @@ Dự án thực hành hoàn chỉnh cho robot **TurtleBot 4 Standard** trong mô
 * **Mã số sinh viên (MSSV):** 23020767
 * **Giảng viên hướng dẫn:** PGS.TS. Hoàng Văn Xiêm, CN. Nguyễn Quốc Bảo
 * **Video Demo (Google Drive - Chế độ công khai):** [Xem Video Demo trên Google Drive](https://drive.google.com/drive/folders/1vl4O0C9A4C3Ed_HwHmJAeVCzwEQZulCx?usp=drive_link)
-* **GitHub Repository (Public):** `https://github.com/Tuan404cl/Turtlebot_sim_test3.git`
+* **GitHub Repository (Public):** `https://github.com/Tuan404cl/Turtlebot_sim_test4`
+* **File báo cáo kỹ thuật Bài tập 7 (Phân vùng Bản đồ & Điều hướng Giọng nói - Markdown chuẩn):** [docs/bao_cao_bai_tap_07.md](docs/bao_cao_bai_tap_07.md)
+* **File báo cáo kỹ thuật (Bài tập Phân vùng Bản đồ & Điều hướng Giọng nói - PDF 2 trang):** [docs/bao_cao_voice_navigation.pdf](docs/bao_cao_voice_navigation.pdf)
+* **File báo cáo kỹ thuật (Bài tập Phân vùng Bản đồ & Điều hướng Giọng nói - Markdown):** [docs/bao_cao_voice_navigation.md](docs/bao_cao_voice_navigation.md)
+* **File báo cáo kỹ thuật Bài tập 6 (Điều khiển cử chỉ tay - Markdown):** [docs/bao_cao_bai_tap_06.md](docs/bao_cao_bai_tap_06.md)
 * **File báo cáo kỹ thuật Markdown:** [docs/bao_cao_thuc_hanh_04.md](docs/bao_cao_thuc_hanh_04.md)
 * **File báo cáo kỹ thuật HTML:** [docs/bao_cao_thuc_hanh_04.html](docs/bao_cao_thuc_hanh_04.html)
 * **File báo cáo PDF hoàn chỉnh:** [docs/bao_cao_thuc_hanh_04.pdf](docs/bao_cao_thuc_hanh_04.pdf)
@@ -165,6 +169,22 @@ Lệnh trên tự động khởi chạy Gazebo Simulation (`warehouse`), tự đ
 | **Giơ ngón cái (Thumbs Up)** | `Thumbs_Up` | **Xác nhận và thực hiện** hành vi đã chọn |
 | **Xòe bàn tay (Open Palm)** | `Open_Palm` | **Robot dừng ngay lập tức** |
 | **Nắm tay (Closed Fist)** | `Closed_Fist` | **Hủy hành vi hiện tại** và trở về trạng thái chờ |
+
+---
+
+## 🎙️ Phân Vùng Bản Đồ Nhà Kho & Điều Hướng Bằng Giọng Nói Trực Tiếp Qua Microphone Với Nav2
+
+### 1. Chạy Tích Hợp Toàn Bộ Hệ Thống Điều Hướng Giọng Nói
+```bash
+./src/turtlebot4_practice4/scripts/run_voice_navigation_all.sh
+```
+* **Thu âm trực tiếp từ Microphone**: Nhấn phím `[SPACE]` hoặc `[R]` trên cửa sổ *Warehouse Live Microphone Voice Navigation Studio* để nói câu lệnh trực tiếp vào Microphone (4 giây), hoặc nhấn phím `[M]` để bật chế độ **Auto-Listen VAD** (tự động lắng nghe liên tục từ Microphone).
+* **05 Khu vực chức năng nhà kho (`config/semantic_regions.json` & `.yaml`)**:
+  * **`A` — Khu nhập hàng** (`x = 1.80 m, y = 13.00 m, yaw = 0.00 rad`)
+  * **`B` — Khu phân loại** (`x = 2.80 m, y = 5.30 m, yaw = 1.57 rad`)
+  * **`C` — Khu xuất hàng** (`x = 3.20 m, y = 1.20 m, yaw = 0.00 rad`)
+  * **`D` — Khu kệ hàng** (`x = 2.00 m, y = -8.50 m, yaw = -1.57 rad`)
+  * **`E` — Trạm sạc** (`x = -1.60 m, y = 0.00 m, yaw = 3.14 rad`)
 
 ---
 
